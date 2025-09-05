@@ -2,13 +2,25 @@ from flask import Flask
 from flask import redirect, render_template, request, flash, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import db
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key' 
 
+def require_login(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in first.", "error")
+            return redirect(url_for("login"))
+        return func(*args, **kwargs)
+    return wrapper
+
 @app.route("/")
 def main():
    return render_template("index.html")
+
+
 
 @app.route("/register")
 def register():
@@ -75,11 +87,8 @@ def logout():
     return redirect(url_for("main"))
 
 @app.route("/dashboard")
+@require_login
 def dashboard():
-    if "user_id" not in session:
-        flash("Please log in first.", "error")
-        return redirect(url_for("login"))
-
     user_books = db.query("SELECT * FROM books WHERE user_id = ?", [session["user_id"]])
     all_books = db.query("""
                         SELECT books.*, users.username FROM books
@@ -87,50 +96,95 @@ def dashboard():
                         WHERE books.user_id != ? ORDER BY users.username
                         """, [session["user_id"]])
     
-    return render_template("dashboard.html", user_books=user_books, all_books = all_books)
+    return render_template("dashboard.html", user_books=user_books, all_books = all_books)    
 
-@app.route("/add_book", methods=["GET"])
-def add_book_page():
-    if "user_id" not in session:
-        flash("Please log in first.", "error")
-        return redirect(url_for("login"))
-    return render_template("add_book.html")
-    
-
-@app.route("/add_book", methods=["POST"])
+@app.route("/add_book", methods=["GET","POST"])
+@require_login
 def add_book():
-    print("HELLO")
-    
-    if "user_id" not in session:
-        flash("Please log in first.", "error")
-        return redirect(url_for("login"))
+    if request.method =="POST":
+      print(" User is logged in:", session["user_id"])
+      print(" Form data received:", request.form)
+      
+      title = request.form.get("title")
+      author = request.form.get("author")
+      
+      if not title or not author:
+          flash("Title and author are required.", "error")
+          print(" Missing title or author")
+          return redirect(url_for("dashboard"))
 
-    print(" User is logged in:", session["user_id"])
-    print(" Form data received:", request.form)
-    
-    title = request.form.get("title")
-    author = request.form.get("author")
-    
-    if not title or not author:
-        flash("Title and author are required.", "error")
-        print(" Missing title or author")
+      print(" Attempting to insert book:", title, author)
+
+      try:
+          db.execute(
+              "INSERT INTO books (user_id, title, author, genre, year, language, comment, rating) "
+              "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+              (session["user_id"], title, author, request.form.get("genre"),
+                request.form.get("year"), request.form.get("language"), 
+                request.form.get("comment"), request.form.get("rating"))
+          )
+          flash("Book added successfully!", "success")
+      except Exception as e:
+          flash(f"Database error: {e}", "error")
+
+      return redirect(url_for("dashboard"))
+
+    return render_template("add_book.html")
+
+@app.route("/edit_book/<int:id>", methods=["GET", "POST"])
+@require_login
+def edit_book(id):
+    book = db.query("SELECT * FROM books WHERE id = ?", [id])
+    if not book:
+        flash("Book not found.", "error")
+        return redirect(url_for("dashboard"))
+    book = book[0]
+
+    if book["user_id"] != session["user_id"]:
+        flash("You cannot edit this book.", "error")
         return redirect(url_for("dashboard"))
 
-    print(" Attempting to insert book:", title, author)
+    if request.method == "POST":
+        title = request.form.get("title")
+        author = request.form.get("author")
+        genre = request.form.get("genre")
+        year = request.form.get("year")
+        language = request.form.get("language")
+        comment = request.form.get("comment")
+        rating = request.form.get("rating")
+
+        try:
+            db.execute("""
+                UPDATE books SET title=?, author=?, genre=?, year=?, language=?, comment=?, rating=?
+                WHERE id=?
+            """, [title, author, genre, year, language, comment, rating, id])
+            flash("Book updated successfully!", "success")
+        except Exception as e:
+            flash(f"Database error: {e}", "error")
+
+        return redirect(url_for("dashboard"))
+
+    return render_template("edit_book.html", book=book)
+@app.route("/delete_book/<int:id>", methods=["POST"])
+@require_login
+def delete_book(id):
+    book = db.query("SELECT * FROM books WHERE id = ?", [id])
+    if not book:
+        flash("Book not found.", "error")
+        return redirect(url_for("dashboard"))
+    book = book[0]
+
+    if book["user_id"] != session["user_id"]:
+        flash("You cannot delete this book.", "error")
+        return redirect(url_for("dashboard"))
 
     try:
-        db.execute(
-            "INSERT INTO books (user_id, title, author, genre, year, language, comment, rating) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (session["user_id"], title, author, request.form.get("genre"),
-             request.form.get("year"), request.form.get("language"), 
-             request.form.get("comment"), request.form.get("rating"))
-        )
-        flash("Book added successfully!", "success")
+        db.execute("DELETE FROM books WHERE id = ?", [id])
+        flash("Book deleted successfully!", "success")
     except Exception as e:
         flash(f"Database error: {e}", "error")
 
     return redirect(url_for("dashboard"))
-   
+
 if __name__ == "__main__":
     app.run(debug=True)

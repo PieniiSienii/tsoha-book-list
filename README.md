@@ -1,6 +1,6 @@
 # tsoha-book-list
 
-##Tehty
+## Tehty
 - Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisälle sovellukseen ✅
 - Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan lukemiaan kirjoja ✅
 - Käyttäjä näkee omat ja muiden lisäämät kirjat ✅

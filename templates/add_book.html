@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add a New Book</title>
+</head>
+<body>
+
+    <h1>Add a New Book</h1>
+    <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+
+    <form action="{{ url_for('add_book') }}" method="post">
+        <p>Title: <input type="text" name="title" required></p>
+        <p>Author: <input type="text" name="author" required></p>
+        <p>Genre:  
+          <select name="genre">
+            <option value="">Select a genre</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Science Fiction">Science Fiction</option>
+            <option value="Dystopian">Dystopian</option>
+            <option value="Horror">Horror</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Romance">Romance</option>
+            <option value="Historical Fiction">Historical Fiction</option>
+            <option value="Biography">Biography</option>
+            <option value="Self-Help">Self-Help</option>
+            <option value="True Crime">True Crime</option>
+          </select>
+        </p>
+        
+        <p>Year: <input type="number" name="year"></p>
+        <p>Language: <input type="text" name="language"></p>
+        <p>Comment: <textarea name="comment"></textarea></p>
+        <p>Rating (1-5): <input type="number" name="rating" min="1" max="5"></p>
+        <p><input type="submit" value="Save Book" onclick="console.log('Form submitted')"></p>
+
+    </form>
+
+</body>
+</html>

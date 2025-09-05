@@ -1,0 +1,12 @@
+.env
+#Database
+database.db
+# Python
+*.pyc
+__pycache__/
+
+# Virtualenv
+venv/
+
+# Editorit
+.vscode/

@@ -1,5 +1,3 @@
-from math import exp
-import sqlite3
 from flask import Flask
 from flask import redirect, render_template, request, flash, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -82,11 +80,16 @@ def dashboard():
         flash("Please log in first.", "error")
         return redirect(url_for("login"))
 
-    books = db.query("SELECT * FROM books WHERE user_id = ?", [session["user_id"]])
+    user_books = db.query("SELECT * FROM books WHERE user_id = ?", [session["user_id"]])
+    all_books = db.query("""
+                        SELECT books.*, users.username FROM books
+                        JOIN users ON books.user_id = users.id
+                        WHERE books.user_id != ? ORDER BY users.username
+                        """, [session["user_id"]])
     
-    return render_template("dashboard.html", books=books)
+    return render_template("dashboard.html", user_books=user_books, all_books = all_books)
 
-@app.route("/add_book", methods=["POST"])
+@app.route("/add_book", methods=["GET"])
 def add_book_page():
     if "user_id" not in session:
         flash("Please log in first.", "error")
@@ -127,7 +130,7 @@ def add_book():
     except Exception as e:
         flash(f"Database error: {e}", "error")
 
-    return redirect(main())
+    return redirect(url_for("dashboard"))
    
 if __name__ == "__main__":
     app.run(debug=True)

@@ -8,7 +8,7 @@
 <body>
 
     <h1>Add a New Book</h1>
-    <a href="{{ url_for('dashboard') }}"><button>Back to Dashboard</button></a>
+    <a href="{{ url_for('dashboard') }}"><button>Back to Main page</button></a>
 
     <form action="{{ url_for('add_book') }}" method="post">
         <p>Title: <input type="text" name="title" required></p>

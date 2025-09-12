@@ -1,16 +1,23 @@
-# tsoha-book-list
+# Tsoha Book List
 
-## Tehty
-- Käyttäjä pystyy luomaan tunnuksen ja kirjautumaan sisälle sovellukseen ✅
-- Käyttäjä pystyy lisäämään, muokkaamaan ja poistamaan lukemiaan kirjoja ✅
-- Käyttäjä näkee omat ja muiden lisäämät kirjat ✅
-- Käyttäjä pystyy hakemaan kirjoja nimellä/ kirjailijalla✅
+Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjoista.
 
-## Toteutettavana
-- Käyttäjä pystyy lisäämään muiden lukemiin kirjoihin arvostelun (1-5) tai kommentin 
+## Toiminnot
 
+- Käyttäjät voivat **luoda tunnuksen ja kirjautua sisään**.
+- Jokaisella käyttäjällä on oma näkymänsä, jossa näkyvät **hänen omat lisäämänsä kirjat**.
+- Käyttäjät voivat **lisätä, muokata ja poistaa** vain omia kirjalistauksiaan.
+- Käyttäjät voivat tarkastella myös **muiden käyttäjien lisäämiä kirjoja**.
+- Käyttäjät voivat hakea kirjoja **nimen tai kirjailijan perusteella**.
+- Kirjoihin liittyy perustiedot (nimi, kirjailija, genre, vuosi, kieli, kommentti, arvio).
 
-##Sovelluksen asennus
+## Kehityksessä
+
+- Käyttäjä voi lisätä muiden kirjoihin **arvostelun (1–5)** tai **kommentin**.
+- Kirjat voidaan luokitella **genreittäin** ja niitä voidaan selata kategorioiden kautta.
+- Tulevaisuudessa käyttöliittymää selkeytetään ja lisätään tarkempi käyttäjäsivu.
+
+## Sovelluksen asennus
 
 Asenna flask-kirjasto:
 ```bash

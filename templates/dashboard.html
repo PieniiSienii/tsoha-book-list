@@ -1,19 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 </head>
+
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+    
+    {% if session.user_id %}
+    
+    <h1>Welcome, <a href="/user/{{ session.user_id }}" > {{ session.username }}</a></h1>
+    {% endif %}
 
-    <h1>Welcome, {{ session['username'] }}!</h1>
-    <a href="{{ url_for('logout') }}"><button>Logout</button></a>
-
-    <a href="{{ url_for('add_book') }}">
-    <button>Add New Book</button>
-</a>
-
+    {% if session.user_id %}
+        <a href="/new_book">Add New Book</a>
+        <a href="/logout">Logout</a>
+    {% else %}
+        <a href="/login">Login</a> |
+        <a href="/register">Register</a>
+    {% endif %}
+    
     <h2>Your Books</h2>
     {% if user_books%}
         <ul>
@@ -21,8 +38,10 @@
                 <li>
                     <strong>{{ book.title }}</strong> by {{ book.author }}  
                     {% if book.rating %} - Rated: {{ book.rating }}/5 {% endif %}
-                    <a href="{{ url_for('edit_book', id=book.id) }}">Edit</a> | 
-                    <a href="{{ url_for('delete_book', id=book.id) }}" onclick="return confirm('Are you sure?')">Delete</a>
+                    {#
+                    <a href="edit_book, id=book.id">Edit</a> | 
+                    <a href="{{ url_for('books.delete_book', id=book.id) }}" onclick="return confirm('Are you sure?')">Delete</a>
+                    #}
                 </li>
             {% endfor %}
         </ul>
@@ -47,6 +66,6 @@
         </ul>
     {% else %}
         <p> No books from other users yet. </p>
-    {% endif %}
+    {% endif %} 
 </body>
 </html>

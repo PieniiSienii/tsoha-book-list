@@ -8,9 +8,9 @@
 <body>
 
     <h1>Add a New Book</h1>
-    <a href="{{ url_for('dashboard') }}"><button>Back to Main page</button></a>
+    <a href="/dashboard"><button>Back to Main page</button></a>
 
-    <form action="{{ url_for('add_book') }}" method="post">
+    <form action="/create_book" method="POST">
         <p>Title: <input type="text" name="title" required></p>
         <p>Author: <input type="text" name="author" required></p>
         <p>Genre:  
@@ -34,7 +34,9 @@
         <p>Language: <input type="text" name="language"></p>
         <p>Comment: <textarea name="comment"></textarea></p>
         <p>Rating (1-5): <input type="number" name="rating" min="1" max="5"></p>
-        <p><input type="submit" value="Save Book" onclick="console.log('Form submitted')"></p>
+
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
+        <p><input type="submit" value="Save Book"></p>
 
     </form>
 

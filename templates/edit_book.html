@@ -1,25 +1,31 @@
-<!-- <form action="{{ url_for('books.edit_book', id=book.id) }}" method="post">
+<h1>Edit Book</h1>
+<a href="/dashboard"><button>Back to Main page</button></a>
+
+<form action="/edit_book/{{ book.id }}" method="POST">
     <p>Title: <input type="text" name="title" value="{{ book.title }}" required></p>
     <p>Author: <input type="text" name="author" value="{{ book.author }}" required></p>
-    <p>Genre:
+    <p>Genre:  
       <select name="genre">
         <option value="">Select a genre</option>
-        <option value="Fantasy">Fantasy</option>
-        <option value="Science Fiction">Science Fiction</option>
-        <option value="Dystopian">Dystopian</option>
-        <option value="Horror">Horror</option>
-        <option value="Mystery">Mystery</option>
-        <option value="Thriller">Thriller</option>
-        <option value="Romance">Romance</option>
-        <option value="Historical Fiction">Historical Fiction</option>
-        <option value="Biography">Biography</option>
-        <option value="Self-Help">Self-Help</option>
-        <option value="True Crime">True Crime</option>
-        </select>
+        <option value="Fantasy" {% if book.genre == "Fantasy" %}selected{% endif %}>Fantasy</option>
+        <option value="Science Fiction" {% if book.genre == "Science Fiction" %}selected{% endif %}>Science Fiction</option>
+        <option value="Dystopian" {% if book.genre == "Dystopian" %}selected{% endif %}>Dystopian</option>
+        <option value="Horror" {% if book.genre == "Horror" %}selected{% endif %}>Horror</option>
+        <option value="Mystery" {% if book.genre == "Mystery" %}selected{% endif %}>Mystery</option>
+        <option value="Thriller" {% if book.genre == "Thriller" %}selected{% endif %}>Thriller</option>
+        <option value="Romance" {% if book.genre == "Romance" %}selected{% endif %}>Romance</option>
+        <option value="Historical Fiction" {% if book.genre == "Historical Fiction" %}selected{% endif %}>Historical Fiction</option>
+        <option value="Biography" {% if book.genre == "Biography" %}selected{% endif %}>Biography</option>
+        <option value="Self-Help" {% if book.genre == "Self-Help" %}selected{% endif %}>Self-Help</option>
+        <option value="True Crime" {% if book.genre == "True Crime" %}selected{% endif %}>True Crime</option>
+      </select>
     </p>
+    
     <p>Year: <input type="number" name="year" value="{{ book.year }}"></p>
     <p>Language: <input type="text" name="language" value="{{ book.language }}"></p>
     <p>Comment: <textarea name="comment">{{ book.comment }}</textarea></p>
-    <p>Rating: <input type="number" name="rating" min="1" max="5" value="{{ book.rating }}"></p>
+    <p>Rating (1-5): <input type="number" name="rating" min="1" max="5" value="{{ book.rating }}"></p>
+
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
     <p><input type="submit" value="Save Changes"></p>
-</form> -->
+</form>

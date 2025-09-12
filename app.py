@@ -28,6 +28,12 @@ def check_csrf():
 def main():
    return render_template("index.html")
 
+@app.route("/search")
+def search():
+    query = request.args.get("query")
+    results = books.search(query) if query else []
+    return render_template("search.html", query=query, results=results)
+
 @app.route("/new_book")
 def new_book():
     require_login()
@@ -38,6 +44,7 @@ def new_book():
 def create_book():
   require_login()
   check_csrf()
+
   title = request.form["title"]
   if not title or len(title) > 50:
     abort(403)
@@ -49,13 +56,63 @@ def create_book():
   language = request.form["language"]
   comment = request.form["comment"]
   rating = request.form["rating"]
+  if rating == "":
+    rating = None
   user_id = session["user_id"]
   
   books.add_book(title, author, genre, year, language, comment, rating, user_id)
-  book_id = db.last_insert_id()
 
   flash("Book added succesfully!")
   return redirect("dashboard")
+
+@app.route("/edit_book/<int:book_id>", methods=["GET", "POST"])
+def edit_book_route(book_id):
+    require_login()
+    user_id = session["user_id"]
+
+    if request.method == "POST":
+        check_csrf()
+
+        title = request.form["title"]
+        author = request.form["author"]
+        genre = request.form["genre"]
+        year = request.form["year"]
+        language = request.form["language"]
+        comment = request.form["comment"]
+        rating = request.form["rating"]
+
+        if rating == "":
+            rating = None
+
+        books.edit_book(
+            book_id,
+            title,
+            author,
+            genre,
+            year,
+            language,
+            comment,
+            rating,
+            user_id
+        )
+
+        flash("Book updated successfully!")
+        return redirect("/dashboard")
+
+    book = db.query("SELECT * FROM books WHERE id=? AND user_id=?", [book_id, user_id])
+    if not book:
+        abort(403)
+    return render_template("edit_book.html", book=book[0])
+
+
+@app.route("/delete_book/<int:book_id>", methods=["POST"])
+def delete_book_route(book_id):
+    require_login()
+    check_csrf()
+    user_id = session["user_id"]
+    books.delete_book(book_id, user_id)
+    flash("Book deleted successfully!")
+    return redirect("/dashboard")
 
 @app.route("/register")
 def register():

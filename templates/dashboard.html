@@ -41,6 +41,7 @@
         {% for book in user_books %}
         <li>
             {{ book.title }} - {{ book.author }}
+            <span> <a href="/user/{{ book.user_id }}">{{ book.username }}</a>)</span>
             <form method="GET" action="/edit_book/{{ book.id }}" style="display:inline;">
                 <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
                 <button type="submit" class="button">Edit</button>
@@ -55,24 +56,18 @@
     {% else %}
         <p>No books added yet.</p>
     {% endif %}
-
-    <h2> Books added by other users</h2>
-    {%if all_books %}
-        {% set current_user = None %}
-        <ul>
-        {% for book in all_books %}
-            {% if current_user != book.username %}
-                <h3>{{ book.username }}:</h3>
-                {% set current_user = book.username %}
-            {% endif %}
-            <li>
-                <strong>{{ book.title }}</strong> by {{ book.author }}  
-                {% if book.rating %} - Rated: {{ book.rating }}/5 {% endif %}
-            </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p> No books from other users yet. </p>
-    {% endif %} 
+    
+ <h2>Books added by other users</h2>
+<ul>
+  {% for b in all_books %}
+    <li>
+      <a href="/user/{{ b.owner_id }}">{{ b.username }}</a>:
+      {{ b.title }} by {{ b.author }}
+      {% if b.rating %} - Rated: {{ b.rating }}/5 {% endif %}
+    </li>
+  {% else %}
+    <li>No books from other users.</li>
+  {% endfor %}
+</ul>
 </body>
 </html>

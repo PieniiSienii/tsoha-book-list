@@ -28,6 +28,13 @@ def check_csrf():
 def main():
    return render_template("index.html")
 
+@app.route("/user/<int:user_id>")
+def user_page(user_id):
+    user_, books = user.get_user_page_data(user_id)
+    if not user_:
+        return abort(404)
+    return render_template("user_page.html", user_=user_, books=books)
+
 @app.route("/search")
 def search():
     query = request.args.get("query")
@@ -114,32 +121,44 @@ def delete_book_route(book_id):
     flash("Book deleted successfully!")
     return redirect("/dashboard")
 
-@app.route("/register")
+
+@app.route("/register", methods=["GET", "POST"])
 def register():
-  return render_template("register.html")
+    if request.method == "GET":
+        return render_template("register.html")
+
+    username = request.form["username"]
+    password = request.form["password"]
+
+    ok, err = user.create_user(username, password)
+    if not ok:
+        # TÄRKEÄÄ: palauta tästä, ettei koodi jatka “success”-haaraan
+        return render_template("register.html", error=err, username=username)
+
+    return render_template("register.html", success="Username created successfully!", username=username)
+    # tai redirect("/login")
 
 @app.route("/create", methods=["POST"])
 def create():
-  username = request.form["username"]
-  password1 = request.form["password1"]
-  password2 = request.form["password2"]
+    username = request.form["username"]
+    password1 = request.form["password1"]
+    password2 = request.form["password2"]
 
-  if password1 == "":
-    flash("ERROR: Password can not be empty", "error")
-    return redirect("register")
+    if password1 == "":
+        flash("ERROR: Password can not be empty", "error")
+        return redirect("register")
+    if password1 != password2:
+        flash("ERROR: Passwords do not match", "error")
+        return redirect("register")
 
-  if password1 != password2:
-    flash("ERROR: Passwords do not match", "error")
-    return redirect("register")
+    ok, err = user.create_user(username, password1)
+    if not ok:
+        flash(f"ERROR: {err}", "error")
+        return redirect("register")
 
-  try:
-    user.create_user(username, password1)
-  except sqlite3.IntegrityError:
-    flash("ERROR: Username is already taken", "error")
-    return redirect("register")
+    flash("Username created successfully", "success")
+    return redirect("login")
 
-  flash("Username created successfully", "success")
-  return redirect("login")
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -169,9 +188,11 @@ def logout():
 
 @app.route("/dashboard")
 def dashboard():
+    require_login()
     user_books = db.query("SELECT * FROM books WHERE user_id = ?", [session["user_id"]])
     all_books = db.query("""
-                        SELECT books.*, users.username FROM books
+                        SELECT books.*, users.username, users.id AS owner_id
+                        FROM books
                         JOIN users ON books.user_id = users.id
                         WHERE books.user_id != ? ORDER BY users.username
                         """, [session["user_id"]])

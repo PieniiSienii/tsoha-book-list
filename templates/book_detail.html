@@ -1,0 +1,37 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, msg in messages %}
+        <li class="{{ category }}">{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+<p>
+  <strong>Arvosana (lisääjän antama):</strong>
+  {{ creator_rating if creator_rating is not none else "—" }}
+  &nbsp;|&nbsp;
+  <strong>Kokonaisarvosana:</strong>
+  {{ avg_rating if avg_rating is not none else "—" }}
+</p>
+<p>
+  <a href="/books/{{ book.id }}/comments">
+    Kommentit ({{ comment_count }})
+  </a>
+</p>
+
+<form method="post" action="/books/{{ book.id }}/rate">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <label>Anna arvosana:
+    <select name="rating" required>
+      <option value="">Valitse</option>
+      {% for n in [1,2,3,4,5] %}
+      <option value="{{ n }}">{{ n }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button type="submit">Tallenna</button>
+  <p>
+  </p>
+</form>
+<p><a href="/dashboard"><button>Back to Main page</button></a></p>

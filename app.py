@@ -249,6 +249,20 @@ def book_detail(book_id):
                            creator_rating=creator_rating,
                            comment_count=comment_count)
 
+@app.route("/books")
+def books_list():
+    genre = request.args.get("genre") or None
+    rating_min = request.args.get("rating_min")
+    rating_min = int(rating_min) if rating_min and rating_min.isdigit() else None
+
+    all_genres = books.get_genres()
+    items = books.list_books_filtered(genre=genre, rating_min=rating_min)
+
+    return render_template("book_filtering.html",
+                           books=items,
+                           all_genres=all_genres,
+                           selected_genre=genre,
+                           selected_rating=rating_min)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -53,3 +53,33 @@ def get_book(book_id: int):
              FROM books WHERE id=?"""
     rows = db.query(sql, [book_id])
     return rows[0] if rows else None
+
+def get_genres():
+    rows = db.query("SELECT DISTINCT genre FROM books WHERE genre IS NOT NULL AND genre <> '' ORDER BY genre")
+    return [r["genre"] for r in rows]
+
+def list_books_filtered(genre=None, rating_min=None):
+    base = """
+      SELECT b.id, b.title, b.author, b.genre, b.year, b.language, b.comment, b.rating,
+             ROUND(AVG(r.value), 1) AS avg_rating
+      FROM books b
+      LEFT JOIN ratings r ON r.book_id = b.id
+    """
+    where = []
+    params = []
+
+    if genre:
+        where.append("b.genre = ?")
+        params.append(genre)
+
+    where_sql = (" WHERE " + " AND ".join(where)) if where else ""
+    group_by = " GROUP BY b.id"
+    having = ""
+    if rating_min is not None:
+        having = " HAVING AVG(r.value) >= ?"
+        params.append(int(rating_min))
+
+    order_by = " ORDER BY b.id DESC"
+    sql = base + where_sql + group_by + having + order_by
+    return db.query(sql, params)
+

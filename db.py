@@ -44,5 +44,6 @@ def query(sql, params=()):
         finally:
             con.close()
 
-def last_insert_id():
-    return getattr(g, "last_insert_id", None)
+def last_insert_id() -> int:
+    row = get_connection().execute("SELECT last_insert_rowid() AS id").fetchone()
+    return int(row["id"])

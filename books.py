@@ -1,4 +1,5 @@
 import db
+import ratings
 
 def add_book(title, author, genre, year, language, comment, rating, user_id):
     sql = """
@@ -9,8 +10,15 @@ def add_book(title, author, genre, year, language, comment, rating, user_id):
 
     book_id = db.last_insert_id()
 
-    sql = "INSERT INTO added_books (book_id, user_id) VALUES (?, ?)"
-    db.execute(sql, [book_id, user_id])
+    # jos haluat synkata omistajan arvosanan ratings-tauluun
+    if rating is not None:
+        try:
+            r = int(rating)
+            if 1 <= r <= 5:
+                ratings.upsert_rating(book_id, user_id, r)
+        except Exception:
+            pass
+
 
 def search(query):
     sql = """SELECT id, title, author, genre, year, language, comment, rating
@@ -24,6 +32,14 @@ def edit_book(book_id, title, author, genre, year, language, comment, rating, us
              WHERE id=? AND user_id=?"""
     db.execute(sql, [title, author, genre, year, language, comment, rating, book_id, user_id])
 
+    if rating is not None:
+        try:
+            r = int(rating)
+            if 1 <= r <= 5:
+                ratings.upsert_rating(book_id, user_id, r)
+        except Exception:
+            pass
+
 def delete_book(book_id, user_id):
     book = db.query("SELECT id FROM books WHERE id=? AND user_id=?", [book_id, user_id])
     if not book:
@@ -31,3 +47,9 @@ def delete_book(book_id, user_id):
 
     sql = "DELETE FROM books WHERE id=? AND user_id=?"
     db.execute(sql, [book_id, user_id])
+
+def get_book(book_id: int):
+    sql = """SELECT id, title, author, genre, year, language, comment, rating, user_id
+             FROM books WHERE id=?"""
+    rows = db.query(sql, [book_id])
+    return rows[0] if rows else None

@@ -62,7 +62,7 @@
   {% for b in all_books %}
     <li>
       <a href="/user/{{ b.owner_id }}">{{ b.username }}</a>:
-      {{ b.title }} by {{ b.author }}
+      <a href="/books/{{ b.id }}">{{ b.title }}</a> - {{ b.author }}
       {% if b.rating %} - Rated: {{ b.rating }}/5 {% endif %}
     </li>
   {% else %}

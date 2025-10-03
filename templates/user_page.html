@@ -7,7 +7,7 @@
   <body>
     <h1>@{{ user_.username }}</h1>
 
-    <h3>Lisäämäsi kirjat</h3>
+    <h3>Lisätyt kirjat</h3>
     <ul>
       {% for b in books %}
         <li>{{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}</li>
@@ -15,5 +15,8 @@
         <li>Ei vielä kirjoja.</li>
       {% endfor %}
     </ul>
+    <p>
+    <a href="/dashboard"><button>Back to Main page</button></a>
+    </p>
   </body>
 </html>

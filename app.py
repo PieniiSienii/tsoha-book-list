@@ -1,4 +1,3 @@
-import sqlite3
 import secrets
 
 from flask import Flask
@@ -9,6 +8,8 @@ import db
 import config
 import user
 import books
+import comments
+import ratings
 
 
 app = Flask(__name__)
@@ -124,6 +125,10 @@ def delete_book_route(book_id):
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
+    if request.method == "POST":
+        check_csrf()
+
     if request.method == "GET":
         return render_template("register.html")
 
@@ -132,11 +137,9 @@ def register():
 
     ok, err = user.create_user(username, password)
     if not ok:
-        # TÄRKEÄÄ: palauta tästä, ettei koodi jatka “success”-haaraan
         return render_template("register.html", error=err, username=username)
 
     return render_template("register.html", success="Username created successfully!", username=username)
-    # tai redirect("/login")
 
 @app.route("/create", methods=["POST"])
 def create():
@@ -198,6 +201,54 @@ def dashboard():
                         """, [session["user_id"]])
     
     return render_template("dashboard.html", user_books=user_books, all_books = all_books)    
+
+@app.route("/books/<int:book_id>/rate", methods=["POST"])
+def rate_book(book_id):
+    require_login()
+    check_csrf()
+    user_id = int(session["user_id"])
+    try:
+        value = int(request.form.get("rating", 0))
+    except ValueError:
+        value = 0
+    if value < 1 or value > 5:
+        flash("Arvosanan tulee olla 1–5.", "error")
+        return redirect(f"/books/{book_id}")
+
+    ratings.upsert_rating(book_id, user_id, value)
+    flash("Arvosana lisätty onnistuneesti", "success")
+    return redirect(f"/books/{book_id}")
+
+
+
+@app.route("/books/<int:book_id>/comments", methods=["GET", "POST"])
+def book_comments(book_id):
+    require_login()
+    if request.method == "POST":
+        check_csrf()
+        user_id = session["user_id"]
+        content = (request.form.get("content") or "").strip()
+        if content:
+            comments.add_comment(book_id, user_id, content)
+        return redirect(f"/books/{book_id}/comments")
+
+    comment_list = comments.get_comments(book_id)
+    return render_template("book_comments.html", comments=comment_list, book_id=book_id)
+
+@app.route("/books/<int:book_id>")
+def book_detail(book_id):
+    book = books.get_book(book_id)
+    if not book:
+        abort(404)
+    avg_rating = ratings.get_avg_rating(book_id)
+    creator_rating = ratings.get_creator_rating(book_id)
+    comment_count = comments.get_comment_count(book_id)
+    return render_template("book_detail.html",
+                           book=book,
+                           avg_rating=avg_rating,
+                           creator_rating=creator_rating,
+                           comment_count=comment_count)
+
 
 if __name__ == "__main__":
     app.run(debug=True)

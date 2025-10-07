@@ -2,7 +2,7 @@
 
 Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjoista.
 
-## Toiminnot
+## Toteutettu
 
 - Käyttäjät voivat **luoda tunnuksen ja kirjautua sisään**.
 - Jokaisella käyttäjällä on oma näkymänsä, jossa näkyvät **hänen omat lisäämänsä kirjat**.
@@ -10,12 +10,13 @@ Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjois
 - Käyttäjät voivat tarkastella myös **muiden käyttäjien lisäämiä kirjoja**.
 - Käyttäjät voivat hakea kirjoja **nimen tai kirjailijan perusteella**.
 - Kirjoihin liittyy perustiedot (nimi, kirjailija, genre, vuosi, kieli, kommentti, arvio).
+- Käyttäjä voi lisätä muiden kirjoihin **arvostelun (1–5)** tai **kommentin**.
+- Kirjat voidaan luokitella **genreittäin** tai **arvostelun** perusteella, ja niitä voidaan selata kategorioiden kautta.
+- Käyttäjillä on omat käyttäjäsivut
 
 ## Kehityksessä
 
-- Käyttäjä voi lisätä muiden kirjoihin **arvostelun (1–5)** tai **kommentin**.
-- Kirjat voidaan luokitella **genreittäin** ja niitä voidaan selata kategorioiden kautta.
-- Tulevaisuudessa käyttöliittymää selkeytetään ja lisätään tarkempi käyttäjäsivu.
+- Tulevaisuudessa käyttöliittymää selkeytetään ja lisätään tyyliasetuksia
 
 ## Sovelluksen asennus
 

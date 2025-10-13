@@ -1,4 +1,6 @@
 import secrets
+from datetime import datetime
+
 
 from flask import Flask
 from flask import abort, redirect, render_template, request, flash, session
@@ -46,33 +48,54 @@ def search():
 @app.route("/new_book")
 def new_book():
     require_login()
-    return render_template("add_book.html")
+    all_categories = categories.all_categories()
+    return render_template("add_book.html", categories=all_categories)
 
 
 @app.route("/create_book", methods=["POST"])
 def create_book():
-  require_login()
-  check_csrf()
+    require_login()
+    check_csrf()
 
-  title = request.form["title"]
-  if not title or len(title) > 50:
-    abort(403)
-  author = request.form["author"]
-  if not author or len(author) > 50:
-    abort(403)
-  genre = request.form["genre"]
-  year = request.form["year"]
-  language = request.form["language"]
-  comment = request.form["comment"]
-  rating = request.form["rating"]
-  if rating == "":
-    rating = None
-  user_id = session["user_id"]
-  
-  books.add_book(title, author, genre, year, language, comment, rating, user_id)
+    title = (request.form.get("title") or "").strip()
+    author = (request.form.get("author") or "").strip()
+    year = request.form.get("year") or None
+    language = (request.form.get("language") or "").strip() or None
+    comment = (request.form.get("comment") or "").strip() or None
+    rating = request.form.get("rating") or None
+    category_ids = request.form.getlist("categories")  # <— monivalinta
 
-  flash("Book added succesfully!")
-  return redirect("dashboard")
+    if not title or len(title) > 200:
+        flash("Kirjan nimi vaaditaan (max 200).", "error")
+        return redirect("/new_book")
+    if not author or len(author) > 200:
+        flash("Kirjailija vaaditaan (max 200).", "error")
+        return redirect("/new_book")
+
+    try:
+        year = int(year) if year not in ("", None) else None
+    except ValueError:
+        flash("Vuosi ei ole numero.", "error")
+        return redirect("/new_book")
+
+    try:
+        rating = int(rating) if rating not in ("", None) else None
+    except ValueError:
+        rating = None
+
+    if not category_ids:
+        flash("Valitse vähintään yksi luokka.", "error")
+        return redirect("/new_book")
+
+    user_id = session["user_id"]
+
+    # HUOM: books.add_book ei enää odota genreä
+    book_id = books.add_book(title, author, year, language, comment, rating, user_id)
+
+    categories.set_for_book(book_id, category_ids)
+
+    flash("Kirja lisätty onnistuneesti!", "success")
+    return redirect("/dashboard")
 
 @app.route("/edit_book/<int:book_id>", methods=["GET", "POST"])
 def edit_book_route(book_id):
@@ -82,36 +105,63 @@ def edit_book_route(book_id):
     if request.method == "POST":
         check_csrf()
 
-        title = request.form["title"]
-        author = request.form["author"]
-        genre = request.form["genre"]
-        year = request.form["year"]
-        language = request.form["language"]
-        comment = request.form["comment"]
-        rating = request.form["rating"]
+        title = (request.form.get("title") or "").strip()
+        author = (request.form.get("author") or "").strip()
+        year = request.form.get("year") or None
+        language = (request.form.get("language") or "").strip() or None
+        comment = (request.form.get("comment") or "").strip() or None
+        rating = request.form.get("rating") or None
+        category_ids = request.form.getlist("categories")
 
-        if rating == "":
+        if not title or not author:
+            flash("Kirjan nimi ja kirjailija ovat pakollisia.", "error")
+            return redirect(f"/edit_book/{book_id}")
+        if not category_ids:
+            flash("Valitse vähintään yksi luokka.", "error")
+            return redirect(f"/edit_book/{book_id}")
+
+        try:
+            year = int(year) if year not in ("", None) else None
+        except ValueError:
+            flash("Vuosi ei ole numero.", "error")
+            return redirect(f"/edit_book/{book_id}")
+        try:
+            rating = int(rating) if rating not in ("", None) else None
+        except ValueError:
             rating = None
 
         books.edit_book(
-            book_id,
-            title,
-            author,
-            genre,
-            year,
-            language,
-            comment,
-            rating,
-            user_id
+            book_id=book_id,
+            title=title,
+            author=author,
+            year=year,
+            language=language,
+            comment=comment,
+            rating=rating,
+            user_id=user_id
         )
 
-        flash("Book updated successfully!")
+        categories.set_for_book(book_id, category_ids)
+
+        flash("Kirja päivitetty.", "success")
         return redirect("/dashboard")
 
-    book = db.query("SELECT * FROM books WHERE id=? AND user_id=?", [book_id, user_id])
-    if not book:
+    # GET
+    row = db.query("SELECT * FROM books WHERE id=? AND user_id=?", [book_id, user_id])
+    if not row:
         abort(403)
-    return render_template("edit_book.html", book=book[0])
+    book = row[0]
+
+    all_categories = categories.all_categories()
+    selected = categories.get_for_book(book_id)  # list[int]
+
+    return render_template(
+        "edit_book.html",
+        book=book,
+        categories=all_categories,
+        selected_categories=selected,
+        current_year=datetime.now().year
+    )
 
 
 @app.route("/delete_book/<int:book_id>", methods=["POST"])
@@ -119,9 +169,13 @@ def delete_book_route(book_id):
     require_login()
     check_csrf()
     user_id = session["user_id"]
-    books.delete_book(book_id, user_id)
-    flash("Book deleted successfully!")
+    try:
+        books.delete_book(book_id, user_id)
+        flash("Kirja poistettu onnistuneesti!", "success")
+    except Exception as e:
+        flash(str(e), "error")
     return redirect("/dashboard")
+
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -150,18 +204,18 @@ def create():
 
     if password1 == "":
         flash("ERROR: Password can not be empty", "error")
-        return redirect("register")
+        return redirect("/register")
     if password1 != password2:
         flash("ERROR: Passwords do not match", "error")
-        return redirect("register")
+        return redirect("/register")
 
     ok, err = user.create_user(username, password1)
     if not ok:
         flash(f"ERROR: {err}", "error")
-        return redirect("register")
+        return redirect("/register")
 
     flash("Username created successfully", "success")
-    return redirect("login")
+    return redirect("/login")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -176,10 +230,10 @@ def login():
             session["username"] = username
             session["csrf_token"] = secrets.token_hex(16)
             flash("Login successful!", "success")
-            return redirect("dashboard")
+            return redirect("/dashboard")
         else: 
             flash("ERROR: Invalid username or password", "error")
-            return redirect("login")
+            return redirect("/login")
 
     return render_template("login.html")
 
@@ -252,18 +306,35 @@ def book_detail(book_id):
 
 @app.route("/books")
 def books_list():
-    genre = request.args.get("genre") or None
-    rating_min = request.args.get("rating_min")
-    rating_min = int(rating_min) if rating_min and rating_min.isdigit() else None
+    # query-parametrit
+    category_id = request.args.get("category_id") or None
+    try:
+        category_id = int(category_id) if category_id else None
+    except ValueError:
+        category_id = None
 
-    all_genres = books.get_genres()
-    items = books.list_books_filtered(genre=genre, rating_min=rating_min)
+    rating_min = request.args.get("rating_min")
+    try:
+        rating_min = int(rating_min) if rating_min and rating_min.isdigit() else None
+    except ValueError:
+        rating_min = None
+
+    # kaadetaan UI:lle kaikki kategoriat (valikkoa varten)
+    all_cats = categories.all_categories()
+
+    # haetaan kirjat filttereillä
+    items = books.list_books_filtered(category_id=category_id, rating_min=rating_min)
 
     return render_template("book_filtering.html",
                            books=items,
-                           all_genres=all_genres,
-                           selected_genre=genre,
+                           all_genres=all_cats,          # jos templatessa on vielä 'all_genres'
+                           selected_genre=category_id,   # jos templatessa on vielä 'selected_genre'
                            selected_rating=rating_min)
+
+
+@app.context_processor
+def inject_globals():
+    return {"current_year": datetime.now().year}
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,31 +1,54 @@
-<h1>Edit Book</h1>
-<a href="/dashboard"><button>Back to Main page</button></a>
+{% extends "base.html" %}
+{% block content %}
 
-<form action="/edit_book/{{ book.id }}" method="POST">
-    <p>Title: <input type="text" name="title" value="{{ book.title }}" required></p>
-    <p>Author: <input type="text" name="author" value="{{ book.author }}" required></p>
-    <p>Genre:  
-      <select name="genre">
-        <option value="">Select a genre</option>
-        <option value="Fantasy" {% if book.genre == "Fantasy" %}selected{% endif %}>Fantasy</option>
-        <option value="Science Fiction" {% if book.genre == "Science Fiction" %}selected{% endif %}>Science Fiction</option>
-        <option value="Dystopian" {% if book.genre == "Dystopian" %}selected{% endif %}>Dystopian</option>
-        <option value="Horror" {% if book.genre == "Horror" %}selected{% endif %}>Horror</option>
-        <option value="Mystery" {% if book.genre == "Mystery" %}selected{% endif %}>Mystery</option>
-        <option value="Thriller" {% if book.genre == "Thriller" %}selected{% endif %}>Thriller</option>
-        <option value="Romance" {% if book.genre == "Romance" %}selected{% endif %}>Romance</option>
-        <option value="Historical Fiction" {% if book.genre == "Historical Fiction" %}selected{% endif %}>Historical Fiction</option>
-        <option value="Biography" {% if book.genre == "Biography" %}selected{% endif %}>Biography</option>
-        <option value="Self-Help" {% if book.genre == "Self-Help" %}selected{% endif %}>Self-Help</option>
-        <option value="True Crime" {% if book.genre == "True Crime" %}selected{% endif %}>True Crime</option>
-      </select>
-    </p>
-    
-    <p>Year: <input type="number" name="year" value="{{ book.year }}"></p>
-    <p>Language: <input type="text" name="language" value="{{ book.language }}"></p>
-    <p>Comment: <textarea name="comment">{{ book.comment }}</textarea></p>
-    <p>Rating (1-5): <input type="number" name="rating" min="1" max="5" value="{{ book.rating }}"></p>
+<h1>Muokkaa kirjaa</h1>
 
-    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-    <p><input type="submit" value="Save Changes"></p>
+{% with msgs = get_flashed_messages(with_categories=True) %}
+  {% if msgs %}
+    <ul class="messages">
+      {% for cat, msg in msgs %}
+        <li class="msg {{ cat }}">{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<form method="post" action="/books/{{ book.id }}">
+  {{ csrf_token() }}
+
+  <label for="title">Kirjan nimi</label>
+  <input id="title" name="title" value="{{ book.title }}" required maxlength="200">
+
+  <label for="author">Kirjailija</label>
+  <input id="author" name="author" value="{{ book.author }}" required maxlength="200">
+
+  <label for="year">Julkaisuvuosi</label>
+  <input id="year" name="year" type="number" value="{{ book.year or '' }}" min="-3000" max="{{ current_year }}">
+
+  <label for="language">Kieli</label>
+  <input id="language" name="language" value="{{ book.language or '' }}" maxlength="50">
+
+  <label for="categories">Luokat</label>
+  <select id="categories" name="categories" multiple size="8" required>
+    {% for c in categories %}
+      <option value="{{ c.id }}" {% if c.id in selected_categories %}selected{% endif %}>
+        {{ c.name }}
+      </option>
+    {% endfor %}
+  </select>
+  <small>Pidä Ctrl (Windows) tai Command (Mac) pohjassa valitaksesi useita.</small>
+
+  <div style="margin-top: 1rem;">
+    <button type="submit">Tallenna muutokset</button>
+    <a href="/books/{{ book.id }}">Peruuta</a>
+  </div>
 </form>
+
+<style>
+  .messages { list-style:none; padding:0; margin:.5rem 0; }
+  .msg { padding:.5rem .75rem; margin:.25rem 0; border-radius:6px; border:1px solid #ddd; }
+  .msg.success { background:#e8f8ee; border-color:#98dfb6; }
+  .msg.error { background:#ffecec; border-color:#ff9d9d; }
+</style>
+
+{% endblock %}

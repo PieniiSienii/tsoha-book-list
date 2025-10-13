@@ -1,7 +1,7 @@
 import secrets
 
 from flask import Flask
-from flask import abort, redirect, render_template, request, flash, url_for, session
+from flask import abort, redirect, render_template, request, flash, session
 
 
 import db
@@ -10,6 +10,7 @@ import user
 import books
 import comments
 import ratings
+import categories
 
 
 app = Flask(__name__)

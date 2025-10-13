@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="fi">
-  <head>
-    <meta charset="utf-8">
-    <title>@{{ user_.username }}</title>
-  </head>
-  <body>
-    <h1>@{{ user_.username }}</h1>
+    <head>
+        <meta charset="utf-8">
+        <title>@{{ user_.username }}</title>
+    </head>
+    <body>
+        <h1>@{{ user_.username }}</h1>
 
-    <h3>Lisätyt kirjat</h3>
-    <ul>
-      {% for b in books %}
-        <li>{{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}</li>
-      {% else %}
-        <li>Ei vielä kirjoja.</li>
-      {% endfor %}
-    </ul>
-    <p>
-    <a href="/dashboard"><button>Back to Main page</button></a>
-    </p>
-  </body>
+        <h3>Lisätyt kirjat</h3>
+        <ul>
+        {% for b in books %}
+            <li>{{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}</li>
+        {% else %}
+            <li>Ei vielä kirjoja.</li>
+        {% endfor %}
+        </ul>
+        <p>
+        <a href="/dashboard"><button>Back to Main page</button></a>
+        </p>
+    </body>
 </html>

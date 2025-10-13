@@ -1,17 +1,17 @@
 <h2>Kommentit</h2>
 
 <form method="post" action="/books/{{ book_id }}/comments">
-  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-  <textarea name="content" rows="3" required></textarea>
-  <button type="submit">Lisää kommentti</button>
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <textarea name="content" rows="3" required></textarea>
+    <button type="submit">Lisää kommentti</button>
 </form>
 
 <ul>
-  {% for c in comments %}
+    {% for c in comments %}
     <li><strong>{{ c.author }}</strong> ({{ c.created_at }}): {{ c.content }}</li>
-  {% else %}
+    {% else %}
     <li>Ei kommentteja vielä.</li>
-  {% endfor %}
+    {% endfor %}
 </ul>
 
 <p><a href="/books/{{ book_id }}">Takaisin kirjaan</a></p>

@@ -2,10 +2,10 @@
 
 <form method="get" action="/books" style="margin-bottom: 1rem;">
 <label>Genre:
-<select name="genre">
+<select name="category_id">
     <option value="">(kaikki)</option>
     {% for g in all_genres %}
-    <option value="{{ g }}" {% if selected_genre == g %}selected{% endif %}>{{ g }}</option>
+    <option value="{{ g.id }}" {% if selected_genre == g.id %}selected{% endif %}>{{ g.name }}</option>
     {% endfor %}
 </select>
 </label>
@@ -27,7 +27,7 @@
 {% for b in books %}
 <li>
     <a href="/books/{{ b.id }}">{{ b.title }}</a> - {{ b.author }}
-    {% if b.genre %}<small>({{ b.genre }})</small>{% endif %}
+    {% if b.categories %}<small>({{ b.categories }})</small>{% endif %}
     {% if b['avg_rating'] is not none %} | ⭐ {{ b['avg_rating'] }}{% endif %}
 </li>
 {% else %}

@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS books (
     id INTEGER PRIMARY KEY,
     title TEXT NOT NULL CHECK (length(title) BETWEEN 1 AND 200),
     author TEXT NOT NULL CHECK (length(author) BETWEEN 1 AND 200),
-    year INTEGER CHECK (year >= -3000 AND year <= CAST(strftime('%Y','now') AS INTEGER)),
+    year INTEGER,
     language TEXT CHECK (length(language) <= 50),
-    comment TEXT, -- päällekkäinen book_commentsin kanssa, ok jos tiedostat
+    comment TEXT, -- päällekkäinen book_commentsin kanssa
     rating INTEGER CHECK (rating BETWEEN 1 AND 5 OR rating IS NULL), -- päällekkäinen ratingsin kanssa
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
 );

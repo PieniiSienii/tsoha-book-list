@@ -7,15 +7,16 @@
     <body>
         <h1>@{{ user_.username }}</h1>
 
-        <h3>Lisätyt kirjat</h3>
+        <h3> Your Books</h3>
         <ul>
         {% for b in books %}
             <li>{{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}</li>
         {% else %}
-            <li>Ei vielä kirjoja.</li>
+            <li>No books yet</li>
         {% endfor %}
         </ul>
         <p>
+        <a href="/new_book"><button>Add a New Book</button></a>
         <a href="/dashboard"><button>Back to Main page</button></a>
         </p>
     </body>

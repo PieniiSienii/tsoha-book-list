@@ -25,7 +25,7 @@
 
     {% if session.user_id %}
         <form action="/search" method="GET">
-        <input type="text" name="query" placeholder="Search books">
+        <input type="text" name="query" placeholder="Search by title or author">
         <button type="submit">Search</button>
         </form>
         <a href="/books"><button>Filter</button></a>

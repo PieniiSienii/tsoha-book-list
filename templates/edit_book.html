@@ -13,8 +13,8 @@
   {% endif %}
 {% endwith %}
 
-<form method="post" action="/books/{{ book.id }}">
-  {{ csrf_token() }}
+<form method="post" action="/edit_book/{{ book.id }}">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
   <label for="title">Kirjan nimi</label>
   <input id="title" name="title" value="{{ book.title }}" required maxlength="200">
@@ -31,7 +31,7 @@
   <label for="categories">Luokat</label>
   <select id="categories" name="categories" multiple size="8" required>
     {% for c in categories %}
-      <option value="{{ c.id }}" {% if c.id in selected_categories %}selected{% endif %}>
+      <option value="{{ c.id }}" {% if selected_categories and c.id in selected_categories %}selected{% endif %}>
         {{ c.name }}
       </option>
     {% endfor %}

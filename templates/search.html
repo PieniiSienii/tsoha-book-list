@@ -20,8 +20,7 @@
                 {% for book in results %}
                     <li>
                         <strong>{{ book.title }}</strong> - {{ book.author }}
-                        ({{ book.genre }}, {% if book.year %}{{ book.year }}, {% else %} {% endif %}
-                        Rating: {% if book.rating %}{{ book.rating }}{% else %}No ratings{% endif %})
+                        {% if book.year %} ({{ book.year }}){% endif %}
                     </li>
                 {% endfor %}
             </ul>

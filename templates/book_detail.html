@@ -1,46 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>{{ book.title }}</title></head>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
 <body>
-    <h1>{{ book.title }}</h1>
-    <p>Author: {{ book.author }}</p>
-    <p>Year: {{ book.year or '—' }} | Language: {{ book.language or '—' }}</p>
+    <div class="main-container">
+        <h1>{{ book.title }}</h1>
+        <p>Author: {{ book.author }}</p>
+        <p>Year: {{ book.year or '—' }} | Language: {{ book.language or '—' }}</p>
 
-    <h2>User ratings</h2>
-    {% if creator_rating %}
-      Creator's rating: {{creator_rating}}/5
-    {% else %}
-    <p>Creator haven't rated this book yet.</p>
-    {% endif %}
+        <h2>User ratings</h2>
+        {% if creator_rating %}
+        <p>Creator's rating: {{ creator_rating }}/5</p>
+        {% else %}
+        <p>Creator hasn't rated this book yet.</p>
+        {% endif %}
 
-    <p>
-    All ratings:
-    {% if all_ratings is defined and all_ratings is not none %}
-        {{ '%.1f' % all_ratings }}/5
-    {% else %}
-        No ratings yet
-    {% endif %}
-    </p>
-    
+        <p>
+            All ratings:
+            {% if all_ratings is defined and all_ratings is not none %}
+                {{ '%.1f' % all_ratings }}/5
+            {% else %}
+                No ratings yet
+            {% endif %}
+        </p>
 
-  {% if not is_owner %}
-    <form method="post" action="/books/{{ book.id }}">
-        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-        <input type="hidden" name="action" value="feedback">
-        <input type="hidden" name="next" value="{{ request.args.get('next','') }}">
+        {% if not is_owner %}
+        <form method="post" action="/books/{{ book.id }}">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <input type="hidden" name="action" value="feedback">
+            <input type="hidden" name="next" value="{{ request.args.get('next','') }}">
+            <p>
+                <label for="rating">Your rating (1-5):</label><br>
+                <input type="number" id="rating" name="rating" min="1" max="5">
+            </p>
+            <p>
+                <label for="content">Add a comment:</label><br>
+                <textarea id="content" name="content" rows="3" cols="40" placeholder="Write your thoughts..."></textarea>
+            </p>
+            <button type="submit">Submit feedback</button>
+        </form>
+        {% else %}
+        <p>You are the owner. You cannot rate or comment your own book.</p>
+        {% endif %}
 
-        <label for="rating">Your rating (1-5):</label>
-        <input type="number" id="rating" name="rating" min="1" max="5">
+        <h2>Comments</h2>
+        {% if comments and comments|length > 0 %}
+        <ul class="comment-list">
+            {% for c in comments %}
+            <li>
+                <strong>{{ c.author }}</strong>: {{ c.content }} <em>({{ c.created_at }})</em>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No comments yet.</p>
+        {% endif %}
 
-        <label for="content">Add a comment:</label><br>
-        <textarea id="content" name="content" rows="3" cols="40" placeholder="Write your thoughts..."></textarea>
-
-        <button type="submit">Submit feedback</button>
-    </form>
-  {% else %}
-    <p>You are the owner. You cannot rate or comment your own book.</p>
-  {% endif %}
-
-  <p><a href="/dashboard"><button>Back to Dashboard</button></a></p>
+        <p><a href="/dashboard"><button>Back to Dashboard</button></a></p>
+    </div>
 </body>
 </html>

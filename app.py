@@ -38,32 +38,26 @@ def user_page(user_id):
     if not user_:
         return abort(404)
 
-    #NÄITÄ MUOKATTU: build id->name map for categories once
     all_cats = categories.all_categories() or []
     cat_map = {c["id"]: c["name"] for c in all_cats}
 
-    #NÄITÄ MUOKATTU: helper to resolve category names for a book
     def cat_names_for_book(book_id: int) -> str | None:
         ids = categories.get_for_book(book_id) or []
         names = [cat_map.get(cid) for cid in ids if cid in cat_map]
         return ", ".join(n for n in names if n) or None
 
-    #NÄITÄ MUOKATTU: ensure rows are mutable dicts
     books_list = [dict(b) for b in (books_rows or [])]
 
-    #NÄITÄ MUOKATTU: enrich each book with the same fields as on dashboard
     for b in books_list:
         bid = b["id"]
-        b["avg_rating"]     = ratings.get_avg_rating(bid)          # float | None
-        b["creator_rating"] = ratings.get_creator_rating(bid)      # float | None
-        b["categories_str"] = cat_names_for_book(bid)              # str | None
-        b["comments"]       = comments.get_comments(bid)           # list[{author, content, created_at}]
-        b["comment_count"]  = comments.get_comment_count(bid)      # int
+        b["avg_rating"]     = ratings.get_avg_rating(bid)
+        b["creator_rating"] = ratings.get_creator_rating(bid)
+        b["categories_str"] = cat_names_for_book(bid)
+        b["comments"]       = comments.get_comments(bid)
+        b["comment_count"]  = comments.get_comment_count(bid)
 
-    #NÄITÄ MUOKATTU: include stats if available (won't break if function not present)
     stats = user.get_user_stats(user_id) if hasattr(user, "get_user_stats") else None
 
-    #NÄITÄ MUOKATTU
     return render_template(
         "user_page.html",
         user_=user_,
@@ -95,7 +89,7 @@ def create_book():
     language = (request.form.get("language") or "").strip() or None
     comment = (request.form.get("comment") or "").strip() or None
     rating = request.form.get("rating") or None
-    category_ids = request.form.getlist("categories")  # <— monivalinta
+    category_ids = request.form.getlist("categories")
 
     if not title or len(title) > 200:
         flash("Kirjan nimi vaaditaan (max 200).", "error")
@@ -389,7 +383,6 @@ def book_detail(book_id):
         flash("Unknown action.", "error")
         return redirect(f"/dashboard")
 
-    # GET-haara
     avg_rating = ratings.get_avg_rating(book_id)
     creator_rating = ratings.get_creator_rating(book_id)
     comment_count = comments.get_comment_count(book_id) if hasattr(comments, "get_comment_count") else None
@@ -426,8 +419,8 @@ def books_list():
 
     return render_template("book_filtering.html",
                            books=items,
-                           all_genres=all_cats,          # jos templatessa on vielä 'all_genres'
-                           selected_genre=category_id,   # jos templatessa on vielä 'selected_genre'
+                           all_genres=all_cats,
+                           selected_genre=category_id,
                            selected_rating=rating_min)
 
 

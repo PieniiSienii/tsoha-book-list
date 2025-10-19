@@ -1,37 +1,36 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    {% block title %}Register{% endblock %}
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <ul>
-            {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    {% endwith %}
-    {% block content %}
-    <form action="/create" method="post">
-        <p>
-        Username: <br />
-        <input type="text" name="username" />
-        </p>
-        <p>
-        Password: <br />
-        <input type="password" name="password1" />
-        </p>
-        <p>
-        Password again: <br />
-        <input type="password" name="password2" />
-        </p>
-        <input type="submit" value="create user">
-    </form>
-    <button onclick="window.history.back()">Back</button>
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h2>Register</h2>
+        <form action="/create" method="post">
+            <p>Username:<br>
+                <input type="text" name="username" required>
+            </p>
+            <p>Password:<br>
+                <input type="password" name="password1" required>
+            </p>
+            <p>Password again:<br>
+                <input type="password" name="password2" required>
+            </p>
+            <input type="submit" value="Create user">
+        </form>
+        <p><button onclick="window.history.back()">Back</button></p>
+    </div>
 </body>
-{% endblock %}
 </html>

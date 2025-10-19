@@ -1,66 +1,62 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add a New Book</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add a New Book</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <div class="main-container">
+        <h1>Add a New Book</h1>
+        <a href="/dashboard"><button>Back to Main page</button></a>
 
-  <h1>Add a New Book</h1>
-  <a href="/dashboard"><button>Back to Main page</button></a>
+        {% with msgs = get_flashed_messages(with_categories=True) %}
+            {% if msgs %}
+            <ul>
+                {% for cat, msg in msgs %}
+                <li>{{ msg }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
 
-  {% with msgs = get_flashed_messages(with_categories=True) %}
-    {% if msgs %}
-      <ul>
-        {% for cat, msg in msgs %}
-          <li>{{ msg }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+        <form action="/create_book" method="POST">
+            <p>Title:<br>
+                <input type="text" name="title" id="title" required maxlength="200">
+            </p>
+            <p>Author:<br>
+                <input type="text" name="author" id="author" required maxlength="200">
+            </p>
 
-  <form action="/create_book" method="POST">
-    <p>Title:
-      <input type="text" name="title" id="title" required maxlength="200">
-    </p>
+            <details id="categories-panel">
+                <summary>Categories</summary>
+                <p>
+                    <select name="categories" id="categories" multiple size="8" required>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select><br>
+                    <small>Hold Ctrl to select multiple.</small>
+                </p>
+            </details>
 
-    <p>Author:
-      <input type="text" name="author" id="author" required maxlength="200">
-    </p>
+            <p>Year:<br>
+                <input type="number" name="year" id="year">
+            </p>
+            <p>Language:<br>
+                <input type="text" name="language" id="language" maxlength="50">
+            </p>
+            <p>Comment:<br>
+                <textarea name="comment" id="comment"></textarea>
+            </p>
+            <p>Rating (1-5):<br>
+                <input type="number" name="rating" id="rating" min="1" max="5">
+            </p>
 
-    <details id="categories-panel">
-      <summary>Categories</summary>
-      <p>
-        <select name="categories" id="categories" multiple size="8" required>
-          {% for c in categories %}
-            <option value="{{ c.id }}">{{ c.name }}</option>
-          {% endfor %}
-        </select><br>
-        <small>Hold Ctrl to select multiple.</small>
-      </p>
-    </details>
-
-    <p>Year:
-      <input type="number" name="year" id="year">
-    </p>
-
-    <p>Language:
-      <input type="text" name="language" id="language" maxlength="50">
-    </p>
-
-    <p>Comment:
-      <textarea name="comment" id="comment"></textarea>
-    </p>
-
-    <p>Rating (1-5):
-      <input type="number" name="rating" id="rating" min="1" max="5">
-    </p>
-
-    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-
-    <p><input type="submit" value="Save Book"></p>
-  </form>
-
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <p><input type="submit" value="Save Book"></p>
+        </form>
+    </div>
 </body>
 </html>

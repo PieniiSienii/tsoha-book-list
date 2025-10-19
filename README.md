@@ -12,11 +12,8 @@ Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjois
 - Kirjoihin liittyy perustiedot (nimi, kirjailija, genre, vuosi, kieli, kommentti, arvio).
 - Käyttäjä voi lisätä muiden kirjoihin **arvostelun (1–5)** tai **kommentin**.
 - Kirjat voidaan luokitella **genreittäin** tai **arvostelun** perusteella, ja niitä voidaan selata kategorioiden kautta.
-- Käyttäjillä on omat käyttäjäsivut
-
-## Kehityksessä
-
-- Tulevaisuudessa käyttöliittymää selkeytetään ja lisätään tyyliasetuksia
+- Käyttäjillä on omat käyttäjäsivut, joissa on tilastoja
+- Käyttöliittymää on selkeytetty ja siihen on lisätty tyyliasetuksia
 
 ## Sovelluksen asennus
 

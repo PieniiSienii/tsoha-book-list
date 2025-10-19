@@ -97,6 +97,9 @@ def create_book():
     flash("Kirja lisätty onnistuneesti!", "success")
     return redirect("/dashboard")
 
+from datetime import datetime
+from flask import render_template, request, redirect, flash, abort, session
+
 @app.route("/edit_book/<int:book_id>", methods=["GET", "POST"])
 def edit_book_route(book_id):
     require_login()
@@ -111,7 +114,7 @@ def edit_book_route(book_id):
         language = (request.form.get("language") or "").strip() or None
         comment = (request.form.get("comment") or "").strip() or None
         rating = request.form.get("rating") or None
-        category_ids = request.form.getlist("categories")
+        category_ids = request.form.getlist("categories")  # -> ["1","2",...]
 
         if not title or not author:
             flash("Kirjan nimi ja kirjailija ovat pakollisia.", "error")
@@ -141,28 +144,37 @@ def edit_book_route(book_id):
             user_id=user_id
         )
 
-        categories.set_for_book(book_id, category_ids)
+        # Muunna kategoria-ID:t kokonaisluvuiksi, jos setteri sitä odottaa
+        categories.set_for_book(book_id, [int(x) for x in category_ids])
 
         flash("Kirja päivitetty.", "success")
         return redirect("/dashboard")
 
-    # GET
+    # --- GET ---
     row = db.query("SELECT * FROM books WHERE id=? AND user_id=?", [book_id, user_id])
     if not row:
         abort(403)
     book = row[0]
 
-    all_categories = categories.all_categories()
-    selected = categories.get_for_book(book_id)  # list[int]
+    all_categories = categories.all_categories()  # list of Category / dict / (id, name) ...
+    selected_raw = categories.get_for_book(book_id)
+
+    # Normalisoi valittujen kategoria-ID:t joukoksi
+    def to_id(x):
+        if hasattr(x, "id"): return x.id
+        if isinstance(x, dict): return x.get("id")
+        if isinstance(x, (list, tuple)): return x[0]
+        return int(x)
+
+    selected_ids = {to_id(x) for x in selected_raw}
 
     return render_template(
         "edit_book.html",
         book=book,
         categories=all_categories,
-        selected_categories=selected,
+        selected_categories=selected_ids,
         current_year=datetime.now().year
     )
-
 
 @app.route("/delete_book/<int:book_id>", methods=["POST"])
 def delete_book_route(book_id):
@@ -267,7 +279,7 @@ def rate_book(book_id):
     except ValueError:
         value = 0
     if value < 1 or value > 5:
-        flash("Arvosanan tulee olla 1–5.", "error")
+        flash("Arvosanan tulee olla 1-5.", "error")
         return redirect(f"/books/{book_id}")
 
     ratings.upsert_rating(book_id, user_id, value)
@@ -306,7 +318,6 @@ def book_detail(book_id):
 
 @app.route("/books")
 def books_list():
-    # query-parametrit
     category_id = request.args.get("category_id") or None
     try:
         category_id = int(category_id) if category_id else None
@@ -319,10 +330,8 @@ def books_list():
     except ValueError:
         rating_min = None
 
-    # kaadetaan UI:lle kaikki kategoriat (valikkoa varten)
     all_cats = categories.all_categories()
 
-    # haetaan kirjat filttereillä
     items = books.list_books_filtered(category_id=category_id, rating_min=rating_min)
 
     return render_template("book_filtering.html",

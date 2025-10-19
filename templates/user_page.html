@@ -1,50 +1,136 @@
 <!doctype html>
-<html lang="fi">
-    <head>
-        <meta charset="utf-8">
-        <title>@{{ user_.username }}</title>
-    </head>
-    <body>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <ul>
-                {% for category, message in messages %}
-                <li class="{{ category }}">{{ message }}</li>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>User: {{ user_.username }}</title>
+</head>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <ul>
+            {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+    <h1>@{{ user_.username }}</h1>
+
+    <!-- #NÄITÄ MUOKATTU: Statistics block added, guarded so it won't break if 'stats' is not provided -->
+    {% if stats is defined %}
+    <section>
+        <h2>Statistics</h2>
+
+        <h3>Top categories</h3>
+        {% if stats.top_categories and stats.top_categories|length > 0 %}
+            <ol>
+                {% for c in stats.top_categories %}
+                    <li>{{ c.category_name }} ({{ c.total }})</li>
                 {% endfor %}
-            </ul>
-            {% endif %}
-        {% endwith %}
-
-        <h1>@{{ user_.username }}</h1>
-
-        {% if user_.id == session["user_id"] %}
-            <h3>Your Books</h3>
+            </ol>
         {% else %}
-            <h3>Books added by {{ user_.username }}</h3>
+            <p>No categories yet.</p>
         {% endif %}
 
-        <ul>
-        {% for b in books %}
-            <li>
-                {{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}
-                
-                {% if user_.id == session["user_id"] %}
-                    <a href="/edit_book/{{ b.id }}"><button>Edit</button></a>
-                    <form method="POST" action="/delete_book/{{ b.id }}" style="display:inline;">
-                        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-                        <button type="submit" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
-                    </form>
-                {% else %}
-                    <a href="/books/{{ b.id }}?next={{ request.path }}"><button>Rate or comment</button></a>
-                {% endif %}
-            </li>
+        <h3>Top books by user ratings</h3>
+        {% if stats.top_books_by_avg and stats.top_books_by_avg|length > 0 %}
+            <ol>
+                {% for btop in stats.top_books_by_avg %}
+                    <li>
+                        <a href="/books/{{ btop.id }}">{{ btop.title }}</a>
+                        — {{ '%.1f' % btop.avg_rating }}/5 ({{ btop.ratings_count }} ratings)
+                    </li>
+                {% endfor %}
+            </ol>
+        {% elif stats.fallback_top_books and stats.fallback_top_books|length > 0 %}
+            <p>No user ratings yet. Showing creator’s ratings:</p>
+            <ol>
+                {% for f in stats.fallback_top_books %}
+                    <li>
+                        <a href="/books/{{ f.id }}">{{ f.title }}</a>
+                        — creator rating: {{ f.creator_rating }}/5
+                    </li>
+                {% endfor %}
+            </ol>
         {% else %}
-            <li>No books yet</li>
-        {% endfor %}
-        </ul>
+            <p>No ratings yet.</p>
+        {% endif %}
 
-        <p>
-            <a href="/dashboard"><button>Back to Main page</button></a>
-        </p>
-    </body>
+        <h3>Summary</h3>
+        <ul>
+            <li>Total books: {{ stats.summary.total_books }}</li>
+            <li>Total ratings received: {{ stats.summary.total_ratings_received }}</li>
+            <li>Overall average rating: {{ (('%.1f' % stats.summary.overall_avg_rating) if stats.summary.overall_avg_rating is not none else '—') }}/5</li>
+            <li>Total comments received: {{ stats.summary.total_comments_received }}</li>
+        </ul>
+    </section>
+    {% endif %}
+    <!-- #NÄITÄ MUOKATTU: Statistics block ends -->
+
+    {% if user_.id == session["user_id"] %}
+        <h3>Your Books</h3>
+    {% else %}
+        <h3>Books added by {{ user_.username }}</h3>
+    {% endif %}
+
+    <ul>
+    {% for b in books %}
+        <li>
+            {{ b.title }}{% if b.author %} - {{ b.author }}{% endif %}
+            
+            {% if user_.id == session["user_id"] %}
+                <a href="/edit_book/{{ b.id }}"><button>Edit</button></a>
+                <form method="POST" action="/delete_book/{{ b.id }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                    <button type="submit" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
+                </form>
+            {% else %}
+                <a href="/books/{{ b.id }}?next={{ request.path }}"><button>Rate or comment</button></a>
+            {% endif %}
+
+            <!-- #NÄITÄ MUOKATTU: Show details (same fields as on dashboard) -->
+            <details>
+              <summary>Show details</summary>
+              <p>
+                <b>Title:</b> {{ b.title }}<br>
+                <b>Author:</b> {{ b.author or '—' }}<br>
+                <b>Year:</b> {{ b.year or '—' }}<br>
+                <b>Language:</b> {{ b.language or '—' }}<br>
+                <b>Categories:</b>
+                {% if b.categories_str is defined and b.categories_str %}{{ b.categories_str }}{% else %}—{% endif %}<br>
+                <b>Rating by creator:</b>
+                {% if b.creator_rating is defined and b.creator_rating is not none %}{{ b.creator_rating }}/5{% else %}—{% endif %}<br>
+                <b>All ratings (avg):</b>
+                {% if b.avg_rating is defined and b.avg_rating is not none %}{{ '%.1f' % b.avg_rating }}/5{% else %}—{% endif %}<br>
+                <b>Description by creator:</b> {{ b.comment or '—' }}
+              </p>
+
+              <!-- #NÄITÄ MUOKATTU: Comments header + full list with compact spacing -->
+              <h4 style="margin-bottom:0.2em;">Comments ({{ (b.comment_count if b.comment_count is defined else 0) or 0 }})</h4>
+              {% if b.comments is defined and b.comments and b.comments|length > 0 %}
+                <ul style="margin-left:1.5em; margin-top:0;">
+                  {% for c in b.comments %}
+                    <li>
+                      <strong>{{ c.author }}</strong>:
+                      {{ c.content }} <em>({{ c.created_at }})</em>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <em>No comments yet.</em>
+              {% endif %}
+              <br>
+            </details>
+            <!-- #NÄITÄ MUOKATTU: Show details end -->
+        </li>
+    {% else %}
+        <li>No books yet</li>
+    {% endfor %}
+    </ul>
+
+    <p>
+        <a href="/dashboard"><button>Back to Main page</button></a>
+    </p>
+</body>
 </html>

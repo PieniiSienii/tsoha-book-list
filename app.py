@@ -34,10 +34,42 @@ def main():
 
 @app.route("/user/<int:user_id>")
 def user_page(user_id):
-    user_, books = user.get_user_page_data(user_id)
+    user_, books_rows = user.get_user_page_data(user_id)
     if not user_:
         return abort(404)
-    return render_template("user_page.html", user_=user_, books=books)
+
+    #NÄITÄ MUOKATTU: build id->name map for categories once
+    all_cats = categories.all_categories() or []
+    cat_map = {c["id"]: c["name"] for c in all_cats}
+
+    #NÄITÄ MUOKATTU: helper to resolve category names for a book
+    def cat_names_for_book(book_id: int) -> str | None:
+        ids = categories.get_for_book(book_id) or []
+        names = [cat_map.get(cid) for cid in ids if cid in cat_map]
+        return ", ".join(n for n in names if n) or None
+
+    #NÄITÄ MUOKATTU: ensure rows are mutable dicts
+    books_list = [dict(b) for b in (books_rows or [])]
+
+    #NÄITÄ MUOKATTU: enrich each book with the same fields as on dashboard
+    for b in books_list:
+        bid = b["id"]
+        b["avg_rating"]     = ratings.get_avg_rating(bid)          # float | None
+        b["creator_rating"] = ratings.get_creator_rating(bid)      # float | None
+        b["categories_str"] = cat_names_for_book(bid)              # str | None
+        b["comments"]       = comments.get_comments(bid)           # list[{author, content, created_at}]
+        b["comment_count"]  = comments.get_comment_count(bid)      # int
+
+    #NÄITÄ MUOKATTU: include stats if available (won't break if function not present)
+    stats = user.get_user_stats(user_id) if hasattr(user, "get_user_stats") else None
+
+    #NÄITÄ MUOKATTU
+    return render_template(
+        "user_page.html",
+        user_=user_,
+        books=books_list,
+        stats=stats
+    )
 
 @app.route("/search")
 def search():

@@ -48,3 +48,6 @@ CREATE TABLE IF NOT EXISTS book_comments (
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+INSERT OR IGNORE INTO categories (name) VALUES
+('Romaani'), ('Tietokirja'), ('Fantasia'), ('Sci-fi'), ('Historia'), ('Nuoret');

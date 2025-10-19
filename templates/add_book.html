@@ -1,36 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add a New Book</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add a New Book</title>
 </head>
 <body>
 
-    <h1>Add a New Book</h1>
-    <a href="/dashboard"><button>Back to Main page</button></a>
+  <h1>Add a New Book</h1>
+  <a href="/dashboard"><button>Back to Main page</button></a>
 
-    <form action="/create_book" method="POST">
-        <p>Title: <input type="text" name="title" required></p>
-        <p>Author: <input type="text" name="author" required></p>
+  {% with msgs = get_flashed_messages(with_categories=True) %}
+    {% if msgs %}
+      <ul>
+        {% for cat, msg in msgs %}
+          <li>{{ msg }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
 
-        <p>Categories:
-          <select name="categories" id="categories" multiple size="8" required>
-            {% for c in categories %}
-              <option value="{{ c.id }}">{{ c.name }}</option>
-            {% endfor %}
-          </select>
-        </p>
-        
-        <p>Year: <input type="number" name="year"></p>
-        <p>Language: <input type="text" name="language"></p>
-        <p>Comment: <textarea name="comment"></textarea></p>
-        <p>Rating (1-5): <input type="number" name="rating" min="1" max="5"></p>
+  <form action="/create_book" method="POST">
+    <p>Title:
+      <input type="text" name="title" id="title" required maxlength="200">
+    </p>
 
-        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}" />
-        <p><input type="submit" value="Save Book"></p>
+    <p>Author:
+      <input type="text" name="author" id="author" required maxlength="200">
+    </p>
 
-    </form>
+    <details id="categories-panel">
+      <summary>Categories</summary>
+      <p>
+        <select name="categories" id="categories" multiple size="8" required>
+          {% for c in categories %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select><br>
+        <small>Hold Ctrl (Windows) or Command (Mac) to select multiple.</small>
+      </p>
+    </details>
+
+    <p>Year:
+      <input type="number" name="year" id="year">
+    </p>
+
+    <p>Language:
+      <input type="text" name="language" id="language" maxlength="50">
+    </p>
+
+    <p>Comment:
+      <textarea name="comment" id="comment"></textarea>
+    </p>
+
+    <p>Rating (1-5):
+      <input type="number" name="rating" id="rating" min="1" max="5">
+    </p>
+
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+    <p><input type="submit" value="Save Book"></p>
+  </form>
 
 </body>
 </html>

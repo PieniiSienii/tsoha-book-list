@@ -6,9 +6,9 @@ def add_book(title, author, year, language, comment, rating, user_id):
         INSERT INTO books (title, author, year, language, comment, rating, user_id)
         VALUES (?, ?, ?, ?, ?, ?, ?)
     """
-    db.execute(sql, [title, author, year, language, comment, rating, user_id])
-    row = db.query("SELECT last_insert_rowid() AS id")
-    return row[0]["id"]
+    book_id = db.execute(sql, [title, author, year, language, comment, rating, user_id])
+    return book_id
+
 
 def edit_book(*, book_id, title, author, year, language, comment, rating, user_id):
     sql = """

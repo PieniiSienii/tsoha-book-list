@@ -43,7 +43,3 @@ def query(sql, params=()):
             cur.close()
         finally:
             con.close()
-
-def last_insert_id() -> int:
-    row = get_connection().execute("SELECT last_insert_rowid() AS id").fetchone()
-    return int(row["id"])

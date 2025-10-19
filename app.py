@@ -150,30 +150,24 @@ def edit_book_route(book_id):
         flash("Kirja päivitetty.", "success")
         return redirect("/dashboard")
 
-    # --- GET ---
     row = db.query("SELECT * FROM books WHERE id=? AND user_id=?", [book_id, user_id])
     if not row:
         abort(403)
     book = row[0]
 
-    all_categories = categories.all_categories()  # list of Category / dict / (id, name) ...
-    selected_raw = categories.get_for_book(book_id)
+    all_categories = categories.all_categories()             # lista kategorioita
+    selected_raw = categories.get_for_book(book_id)          # esim. [1,3,5] tai objekteja
 
-    # Normalisoi valittujen kategoria-ID:t joukoksi
     def to_id(x):
-        if hasattr(x, "id"): return x.id
-        if isinstance(x, dict): return x.get("id")
-        if isinstance(x, (list, tuple)): return x[0]
-        return int(x)
-
+        return x.id if hasattr(x, "id") else (x.get("id") if isinstance(x, dict) else (x[0] if isinstance(x, (list, tuple)) else int(x)))
     selected_ids = {to_id(x) for x in selected_raw}
 
     return render_template(
         "edit_book.html",
         book=book,
-        categories=all_categories,
+        categories=all_categories or [],
         selected_categories=selected_ids,
-        current_year=datetime.now().year
+        current_year=datetime.now().year,
     )
 
 @app.route("/delete_book/<int:book_id>", methods=["POST"])
@@ -269,52 +263,73 @@ def dashboard():
     
     return render_template("dashboard.html", user_books=user_books, all_books = all_books)    
 
-@app.route("/books/<int:book_id>/rate", methods=["POST"])
-def rate_book(book_id):
-    require_login()
-    check_csrf()
-    user_id = int(session["user_id"])
-    try:
-        value = int(request.form.get("rating", 0))
-    except ValueError:
-        value = 0
-    if value < 1 or value > 5:
-        flash("Arvosanan tulee olla 1-5.", "error")
-        return redirect(f"/books/{book_id}")
+def safe_next_url():
+    nxt = request.form.get("next") or request.args.get("next") or ""
+    if isinstance(nxt, str) and nxt.startswith("/"):
+        return nxt
+    return "/dashboard"
 
-    ratings.upsert_rating(book_id, user_id, value)
-    flash("Arvosana lisätty onnistuneesti", "success")
-    return redirect(f"/books/{book_id}")
-
-
-
-@app.route("/books/<int:book_id>/comments", methods=["GET", "POST"])
-def book_comments(book_id):
-    require_login()
-    if request.method == "POST":
-        check_csrf()
-        user_id = session["user_id"]
-        content = (request.form.get("content") or "").strip()
-        if content:
-            comments.add_comment(book_id, user_id, content)
-        return redirect(f"/books/{book_id}/comments")
-
-    comment_list = comments.get_comments(book_id)
-    return render_template("book_comments.html", comments=comment_list, book_id=book_id)
-
-@app.route("/books/<int:book_id>")
+@app.route("/books/<int:book_id>", methods=["GET", "POST"])
 def book_detail(book_id):
     book = books.get_book(book_id)
     if not book:
-        abort(404)
+        return abort(404)
+
+    user_id = session.get("user_id")
+    if user_id is not None:
+        user_id = int(user_id)
+
+    is_owner = (user_id == book["user_id"]) if user_id else False
+
+    if request.method == "POST":
+        check_csrf()
+
+        if not user_id:
+            flash("Please sign in to continue.", "error")
+            return redirect(f"/books/{book_id}")
+
+        if is_owner:
+            flash("You cannot rate or comment your own book.", "error")
+            return redirect(f"/books/{book_id}")
+
+        action = request.form.get("action", "")
+
+        if action == "feedback":
+            r = request.form.get("rating", type=int)
+            content = (request.form.get("content") or "").strip()
+
+            if r is not None and 1 <= r <= 5:
+                ratings.upsert_rating(book_id, user_id, r)
+                flash("Rating saved.", "success")
+
+            if content:
+                comments.add_comment(book_id, user_id, content)
+                flash("Comment added.", "success")
+
+            if (r is None or not (1 <= r <= 5)) and not content:
+                flash("Please give a rating or a comment.", "error")
+
+            return redirect(safe_next_url())
+
+        flash("Unknown action.", "error")
+        return redirect(f"/dashboard")
+
+    # GET-haara
     avg_rating = ratings.get_avg_rating(book_id)
     creator_rating = ratings.get_creator_rating(book_id)
-    comment_count = comments.get_comment_count(book_id)
-    return render_template("book_detail.html",
-                           book=book,
-                           avg_rating=avg_rating,
-                           creator_rating=creator_rating,
-                           comment_count=comment_count)
+    comment_count = comments.get_comment_count(book_id) if hasattr(comments, "get_comment_count") else None
+    book_comments = comments.get_comments(book_id) if hasattr(comments, "list_for_book") else []
+    all_ratings = ratings.get_avg_rating(book_id)
+    return render_template(
+        "book_detail.html",
+        book=book,
+        is_owner=is_owner,
+        avg_rating=avg_rating,
+        creator_rating=creator_rating,
+        comment_count=comment_count,
+        comments=book_comments,
+        all_ratings=all_ratings,
+    )
 
 @app.route("/books")
 def books_list():

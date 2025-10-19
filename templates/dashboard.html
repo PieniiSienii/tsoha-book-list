@@ -58,17 +58,48 @@
         <p>No books added yet.</p>
     {% endif %}
     
- <h2>Books added by other users</h2>
-<ul>
+    <h2>Books added by other users</h2>
+    <ul>
     {% for b in all_books %}
-    <li>
-        <a href="/user/{{ b.owner_id }}">{{ b.username }}</a>:
-        <a href="/books/{{ b.id }}">{{ b.title }}</a> - {{ b.author }}
-        {% if b.rating %} - Rated: {{ b.rating }}/5 {% endif %}
+        <li>
+        <a href="/books/{{ b.id }}?next={{ request.path }}">{{ b.title }}</a>{% if b.author %} - {{ b.author }}{% endif %}
+        —
+        All ratings:
+        {% if b.avg_rating is defined and b.avg_rating is not none %}
+            {{ '%.1f' % b.avg_rating }}/5
+        {% else %}
+            No ratings yet
+        {% endif %}
+        — Rated by {{ b.username }}: {{ b.rating if b.rating is not none else '—' }}/5
+
+
+        {% if user_.id == session["user_id"] %}
+            <a href="/edit_book/{{ b.id }}"><button>Edit</button></a>
+            <form method="POST" action="/delete_book/{{ b.id }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <button type="submit" onclick="return confirm('Are you sure you want to delete this book?')">Delete</button>
+            </form>
+        {% else %}
+            <a href="/books/{{ b.id }}?next={{ request.path }}"><button>Rate or comment</button></a>
+        {% endif %}
+
+        <details style="margin-top:.25rem;">
+            <summary>Show details</summary>
+            <div>
+            <p>
+                Year: {{ b.year or '—' }} |
+                Language: {{ b.language or '—' }} |
+                Categories: {{ b.categories or '—' }}
+            </p>
+            <p><a href="/books/{{ b.id }}?next={{ request.path }}">View & give feedback</a></p>
+            </div>
+        </details>
     </li>
-    {% else %}
+
+  {% else %}
     <li>No books from other users.</li>
-    {% endfor %}
+  {% endfor %}
 </ul>
+
 </body>
 </html>

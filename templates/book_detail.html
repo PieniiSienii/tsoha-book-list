@@ -1,37 +1,63 @@
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    <ul class="flashes">
-        {% for category, msg in messages %}
-        <li class="{{ category }}">{{ msg }}</li>
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>{{ book.title }}</title></head>
+<body>
+    <h1>{{ book.title }}</h1>
+    <p>Author: {{ book.author }}</p>
+    <p>Year: {{ book.year or '—' }} | Language: {{ book.language or '—' }}</p>
+    <h2>User ratings</h2>
+    {% if all_ratings %}
+    <ul>
+        {% for r in all_ratings %}
+        <li>{{ r.username or ('User #' ~ r.user_id) }}: {{ r.value }}/5</li>
         {% endfor %}
     </ul>
+    {% else %}
+    <p>No user ratings yet.</p>
     {% endif %}
-{% endwith %}
-<p>
-    <strong>Arvosana (lisääjän antama):</strong>
-    {{ creator_rating if creator_rating is not none else "—" }}
-    &nbsp;|&nbsp;
-    <strong>Kokonaisarvosana:</strong>
-    {{ avg_rating if avg_rating is not none else "—" }}
-</p>
-<p>
-    <a href="/books/{{ book.id }}/comments">
-    Kommentit ({{ comment_count }})
-    </a>
-</p>
 
-<form method="post" action="/books/{{ book.id }}/rate">
-    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-    <label>Anna arvosana:
-    <select name="rating" required>
-        <option value="">Valitse</option>
-        {% for n in [1,2,3,4,5] %}
-        <option value="{{ n }}">{{ n }}</option>
-        {% endfor %}
-    </select>
-    </label>
-    <button type="submit">Tallenna</button>
     <p>
+    All ratings:
+    {% if b.avg_rating is defined and b.avg_rating is not none %}
+        {{ '%.1f' % b.avg_rating }}/5
+    {% else %}
+        No ratings yet
+    {% endif %}
+    — Rated by {{ b.username }}: {{ b.rating if b.rating is not none else '—' }}/5
     </p>
-</form>
-<p><a href="/dashboard"><button>Back to Main page</button></a></p>
+
+  {% if not is_owner %}
+    <form method="post" action="/books/{{ book.id }}">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <input type="hidden" name="action" value="feedback">
+        <input type="hidden" name="next" value="{{ request.args.get('next','') }}">
+
+        <label for="rating">Your rating (1-5):</label>
+        <input type="number" id="rating" name="rating" min="1" max="5">
+
+        <label for="content">Add a comment:</label><br>
+        <textarea id="content" name="content" rows="3" cols="40" placeholder="Write your thoughts..."></textarea>
+
+        <button type="submit">Submit feedback</button>
+    </form>
+  {% else %}
+    <p>You are the owner. You cannot rate or comment your own book.</p>
+  {% endif %}
+
+  <h2>Comments</h2>
+  {% if comments %}
+    <ul>
+      {% for c in comments %}
+        <li>
+          <strong>{{ c.username or ('User #' ~ c.user_id) }}</strong>:
+          {{ c.content }} <em>({{ c.created_at }})</em>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No comments yet.</p>
+  {% endif %}
+
+  <p><a href="/dashboard"><button>Back to Dashboard</button></a></p>
+</body>
+</html>

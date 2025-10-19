@@ -3,24 +3,24 @@
 <form method="get" action="/books" style="margin-bottom: 1rem;">
 <label>Genre:
 <select name="category_id">
-    <option value="">(kaikki)</option>
+    <option value="">(All)</option>
     {% for g in all_genres %}
     <option value="{{ g.id }}" {% if selected_genre == g.id %}selected{% endif %}>{{ g.name }}</option>
     {% endfor %}
 </select>
 </label>
 
-<label style="margin-left:12px;">Vähimmäisarvosana:
+<label style="margin-left:12px;">Minimum rating:
 <select name="rating_min">
-    <option value="">(ei rajaa)</option>
+    <option value="">(No limit)</option>
     {% for n in [1,2,3,4,5] %}
     <option value="{{ n }}" {% if selected_rating == n %}selected{% endif %}>{{ n }}+</option>
     {% endfor %}
 </select>
 </label>
 
-<button type="submit" style="margin-left:12px;">Suodata</button>
-<a href="/books" style="margin-left:8px;">Tyhjennä</a>
+<button type="submit" style="margin-left:12px;">Filter</button>
+<a href="/books" style="margin-left:8px;">Clear</a>
 </form>
 
 <ul>
@@ -31,7 +31,7 @@
     {% if b['avg_rating'] is not none %} | ⭐ {{ b['avg_rating'] }}{% endif %}
 </li>
 {% else %}
-<li>Ei kirjoja valituilla suodattimilla.</li>
+<li>No results with selected filters</li>
 {% endfor %}
 </ul>
 <p><a href="/dashboard"><button>Back to Main page</button></a></p>

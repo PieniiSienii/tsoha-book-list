@@ -5,26 +5,23 @@
     <h1>{{ book.title }}</h1>
     <p>Author: {{ book.author }}</p>
     <p>Year: {{ book.year or '—' }} | Language: {{ book.language or '—' }}</p>
+
     <h2>User ratings</h2>
-    {% if all_ratings %}
-    <ul>
-        {% for r in all_ratings %}
-        <li>{{ r.username or ('User #' ~ r.user_id) }}: {{ r.value }}/5</li>
-        {% endfor %}
-    </ul>
+    {% if creator_rating %}
+      Creator's rating: {{creator_rating}}/5
     {% else %}
-    <p>No user ratings yet.</p>
+    <p>Creator haven't rated this book yet.</p>
     {% endif %}
 
     <p>
     All ratings:
-    {% if b.avg_rating is defined and b.avg_rating is not none %}
-        {{ '%.1f' % b.avg_rating }}/5
+    {% if all_ratings is defined and all_ratings is not none %}
+        {{ '%.1f' % all_ratings }}/5
     {% else %}
         No ratings yet
     {% endif %}
-    — Rated by {{ b.username }}: {{ b.rating if b.rating is not none else '—' }}/5
     </p>
+    
 
   {% if not is_owner %}
     <form method="post" action="/books/{{ book.id }}">
@@ -42,20 +39,6 @@
     </form>
   {% else %}
     <p>You are the owner. You cannot rate or comment your own book.</p>
-  {% endif %}
-
-  <h2>Comments</h2>
-  {% if comments %}
-    <ul>
-      {% for c in comments %}
-        <li>
-          <strong>{{ c.username or ('User #' ~ c.user_id) }}</strong>:
-          {{ c.content }} <em>({{ c.created_at }})</em>
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No comments yet.</p>
   {% endif %}
 
   <p><a href="/dashboard"><button>Back to Dashboard</button></a></p>

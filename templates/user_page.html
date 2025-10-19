@@ -5,6 +5,16 @@
         <title>@{{ user_.username }}</title>
     </head>
     <body>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
+
         <h1>@{{ user_.username }}</h1>
 
         {% if user_.id == session["user_id"] %}

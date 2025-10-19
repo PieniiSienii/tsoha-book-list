@@ -50,4 +50,4 @@ CREATE TABLE IF NOT EXISTS book_comments (
 );
 
 INSERT OR IGNORE INTO categories (name) VALUES
-('Romaani'), ('Tietokirja'), ('Fantasia'), ('Sci-fi'), ('Historia'), ('Nuoret');
+('Novel'), ('Non-fiction'), ('Fantasy'), ('Sci-fi'), ('History'), ('Young Adult');

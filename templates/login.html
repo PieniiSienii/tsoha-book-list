@@ -1,37 +1,33 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  {% block title %}Login{% endblock %}
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <ul>
-            {% for category, message in messages %}
-            <li class="{{ category }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-    {% endwith %}
+    <div class="main-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <ul>
+                {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
 
-    {% block content %}
-    <h2>Login</h2>
-    
-    <form action="/login" method="post">
-        <p>
-        Username: <br />
-        <input type="text" name="username" required />
-        </p>
-        <p>
-        Password: <br />
-        <input type="password" name="password" required />
-        </p>
-        <input type="submit" value="Login">
-    </form>
-    {% endblock %}
-    <a href="/">Back to home</a>
-
+        <h2>Login</h2>
+        <form action="/login" method="post">
+            <p>Username:<br>
+                <input type="text" name="username" required>
+            </p>
+            <p>Password:<br>
+                <input type="password" name="password" required>
+            </p>
+            <input type="submit" value="Login">
+        </form>
+        <p><a href="/">Back to home</a></p>
+    </div>
 </body>
 </html>

@@ -1,83 +1,70 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Book</title>
+    <meta charset="UTF-8">
+    <title>Edit Book</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+    <div class="main-container">
+        <h1>Edit your book</h1>
+        <a href="/dashboard"><button>Back to the main page</button></a>
 
-  <h1>Edit your book</h1>
-  <a href="/dashboard"><button>Back to the main page</button></a>
+        {% with msgs = get_flashed_messages(with_categories=True) %}
+            {% if msgs %}
+            <ul>
+                {% for cat, msg in msgs %}
+                <li>{{ msg }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        {% endwith %}
 
-  {% with msgs = get_flashed_messages(with_categories=True) %}
-    {% if msgs %}
-      <ul>
-        {% for cat, msg in msgs %}
-          <li>{{ msg }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
+        <form method="post" action="/edit_book/{{ book.id }}">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
-  <form method="post" action="/edit_book/{{ book.id }}">
-    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <p>Title:<br>
+                <input type="text" id="title" name="title" value="{{ book.title }}" required maxlength="200">
+            </p>
 
-    <p>Title:
-      <input type="text" id="title" name="title" value="{{ book.title }}" required maxlength="200">
-    </p>
+            <p>Author:<br>
+                <input type="text" id="author" name="author" value="{{ book.author }}" required maxlength="200">
+            </p>
 
-    <p>Author:
-      <input type="text" id="author" name="author" value="{{ book.author }}" required maxlength="200">
-    </p>
+            <details id="categories-panel" {% if selected_categories and selected_categories|length > 0 %}open{% endif %}>
+                <summary>Categories</summary>
+                <p>
+                    <select id="categories" name="categories" multiple size="8" required>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}" {% if selected_categories and c.id in selected_categories %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select><br>
+                    <small>Hold Ctrl to select multiple categories.</small>
+                </p>
+            </details>
 
-    <details id="categories-panel">
-      <summary>Categories</summary>
-      <p>
-        <select id="categories" name="categories" multiple size="8" required>
-          {% for c in categories %}
-            <option value="{{ c.id }}" {% if selected_categories and c.id in selected_categories %}selected{% endif %}>
-              {{ c.name }}
-            </option>
-          {% endfor %}
-        </select><br>
-        <small>Hold Ctrl to select multiple categories.</small>
-      </p>
-    </details>
+            <p>Year:<br>
+                <input type="number" id="year" name="year" value="{{ book.year or '' }}" min="-3000" max="{{ current_year }}">
+            </p>
 
-    <p>Year:
-      <input type="number" id="year" name="year" value="{{ book.year or '' }}" min="-3000" max="{{ current_year }}">
-    </p>
+            <p>Language:<br>
+                <input type="text" id="language" name="language" value="{{ book.language or '' }}" maxlength="50">
+            </p>
 
-    <p>Language:
-      <input type="text" id="language" name="language" value="{{ book.language or '' }}" maxlength="50">
-    </p>
+            <p>Comment:<br>
+                <textarea name="comment" id="comment">{{ book.comment or '' }}</textarea>
+            </p>
 
-    <p>Comment:
-      <textarea name="comment" id="comment">{{ book.comment or '' }}</textarea>
-    </p>
+            <p>Rating (1-5):<br>
+                <input type="number" name="rating" id="rating" min="1" max="5" value="{{ book.rating or '' }}">
+            </p>
 
-
-    <p>Rating (1-5):
-      <input type="number" name="rating" id="rating" min="1" max="5" value="{{ book.rating or ''}}">
-    </p>
-
-    <div>
-      <button type="submit">Tallenna muutokset</button>
-      <a href="/books/{{ book.id }}">Peruuta</a>
+            <div>
+                <button type="submit">Save changes</button>
+                <a href="/books/{{ book.id }}">Cancel</a>
+            </div>
+        </form>
     </div>
-  </form>
-
-  <script>
-    // Avaa Categories-palkki automaattisesti, jos kirjalla on valittuja kategorioita
-    (function() {
-      var select = document.getElementById('categories');
-      var panel = document.getElementById('categories-panel');
-      if (select && panel && Array.from(select.options).some(o => o.selected)) {
-        panel.open = true;
-      }
-    })();
-  </script>
-
 </body>
 </html>

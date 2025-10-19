@@ -1,37 +1,53 @@
-<h1>Kaikki kirjat</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filter Books</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="main-container">
+        <h1>Filter Books</h1>
+        <a href="/dashboard"><button>Back to Main page</button></a>
+        <br><br>
 
-<form method="get" action="/books" style="margin-bottom: 1rem;">
-<label>Genre:
-<select name="category_id">
-    <option value="">(All)</option>
-    {% for g in all_genres %}
-    <option value="{{ g.id }}" {% if selected_genre == g.id %}selected{% endif %}>{{ g.name }}</option>
-    {% endfor %}
-</select>
-</label>
+        <form method="get" action="/books" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+            <label>
+                Category:
+                <select name="category_id">
+                    <option value="">All</option>
+                    {% for c in all_genres %}
+                    <option value="{{ c.id }}" {% if selected_genre and selected_genre == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>
+                Min rating:
+                <select name="rating_min">
+                    <option value="">Any</option>
+                    <option value="1" {% if selected_rating == 1 %}selected{% endif %}>1+</option>
+                    <option value="2" {% if selected_rating == 2 %}selected{% endif %}>2+</option>
+                    <option value="3" {% if selected_rating == 3 %}selected{% endif %}>3+</option>
+                    <option value="4" {% if selected_rating == 4 %}selected{% endif %}>4+</option>
+                    <option value="5" {% if selected_rating == 5 %}selected{% endif %}>5</option>
+                </select>
+            </label>
+            <button type="submit">Apply</button>
+        </form>
 
-<label style="margin-left:12px;">Minimum rating:
-<select name="rating_min">
-    <option value="">(No limit)</option>
-    {% for n in [1,2,3,4,5] %}
-    <option value="{{ n }}" {% if selected_rating == n %}selected{% endif %}>{{ n }}+</option>
-    {% endfor %}
-</select>
-</label>
-
-<button type="submit" style="margin-left:12px;">Filter</button>
-<a href="/books" style="margin-left:8px;">Clear</a>
-</form>
-
-<ul>
-{% for b in books %}
-<li>
-    <a href="/books/{{ b.id }}">{{ b.title }}</a> - {{ b.author }}
-    {% if b.categories %}<small>({{ b.categories }})</small>{% endif %}
-    {% if b['avg_rating'] is not none %} | ⭐ {{ b['avg_rating'] }}{% endif %}
-</li>
-{% else %}
-<li>No results with selected filters</li>
-{% endfor %}
-</ul>
-<p><a href="/dashboard"><button>Back to Main page</button></a></p>
+        {% if books and books|length > 0 %}
+        <ul>
+            {% for b in books %}
+            <li class="book-item">
+                <a href="/books/{{ b.id }}">{{ b.title }}</a>{% if b.author %} - {{ b.author }}{% endif %}
+                • Avg: {{ (('%.1f' % b.avg_rating) if b.avg_rating is not none else '—') }}/5
+                • Categories: {{ b.categories or '—' }}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No books match the filters.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

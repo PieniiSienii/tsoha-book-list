@@ -53,6 +53,15 @@
       <input type="text" id="language" name="language" value="{{ book.language or '' }}" maxlength="50">
     </p>
 
+    <p>Comment:
+      <textarea name="comment" id="comment">{{ book.comment or '' }}</textarea>
+    </p>
+
+
+    <p>Rating (1-5):
+      <input type="number" name="rating" id="rating" min="1" max="5" value="{{ book.rating or ''}}">
+    </p>
+
     <div>
       <button type="submit">Tallenna muutokset</button>
       <a href="/books/{{ book.id }}">Peruuta</a>

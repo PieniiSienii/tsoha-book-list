@@ -75,7 +75,7 @@ def create_book():
     try:
         year = int(year) if year not in ("", None) else None
     except ValueError:
-        flash("Vuosi ei ole numero.", "error")
+        flash("Year must be a number.", "error")
         return redirect("/new_book")
 
     try:
@@ -89,12 +89,11 @@ def create_book():
 
     user_id = session["user_id"]
 
-    # HUOM: books.add_book ei enää odota genreä
     book_id = books.add_book(title, author, year, language, comment, rating, user_id)
 
     categories.set_for_book(book_id, category_ids)
 
-    flash("Kirja lisätty onnistuneesti!", "success")
+    flash("Book added succesfully!", "success")
     return redirect("/dashboard")
 
 from datetime import datetime
@@ -114,7 +113,7 @@ def edit_book_route(book_id):
         language = (request.form.get("language") or "").strip() or None
         comment = (request.form.get("comment") or "").strip() or None
         rating = request.form.get("rating") or None
-        category_ids = request.form.getlist("categories")  # -> ["1","2",...]
+        category_ids = request.form.getlist("categories")
 
         if not title or not author:
             flash("Kirjan nimi ja kirjailija ovat pakollisia.", "error")
@@ -144,7 +143,6 @@ def edit_book_route(book_id):
             user_id=user_id
         )
 
-        # Muunna kategoria-ID:t kokonaisluvuiksi, jos setteri sitä odottaa
         categories.set_for_book(book_id, [int(x) for x in category_ids])
 
         flash("Kirja päivitetty.", "success")
@@ -155,8 +153,8 @@ def edit_book_route(book_id):
         abort(403)
     book = row[0]
 
-    all_categories = categories.all_categories()             # lista kategorioita
-    selected_raw = categories.get_for_book(book_id)          # esim. [1,3,5] tai objekteja
+    all_categories = categories.all_categories()
+    selected_raw = categories.get_for_book(book_id)
 
     def to_id(x):
         return x.id if hasattr(x, "id") else (x.get("id") if isinstance(x, dict) else (x[0] if isinstance(x, (list, tuple)) else int(x)))
@@ -253,15 +251,60 @@ def logout():
 @app.route("/dashboard")
 def dashboard():
     require_login()
-    user_books = db.query("SELECT * FROM books WHERE user_id = ?", [session["user_id"]])
-    all_books = db.query("""
-                        SELECT books.*, users.username, users.id AS owner_id
-                        FROM books
-                        JOIN users ON books.user_id = users.id
-                        WHERE books.user_id != ? ORDER BY users.username
-                        """, [session["user_id"]])
-    
-    return render_template("dashboard.html", user_books=user_books, all_books = all_books)    
+
+    user_rows = db.query("""
+        SELECT b.*, u.username
+        FROM books b
+        JOIN users u ON u.id = b.user_id
+        WHERE b.user_id = ?
+        ORDER BY b.title
+        """, [session["user_id"]])
+    user_books =[dict(r) for r in user_rows]
+
+    other_rows = db.query("""
+        SELECT b.*, u.username, u.id AS owner_id
+        FROM books b
+        JOIN users u ON b.user_id = u.id
+        WHERE b.user_id != ?
+        ORDER BY u.username, b.title
+        """, [session["user_id"]])
+
+    all_books = [dict(row) for row in other_rows]
+
+    all_cats = categories.all_categories() or []
+    cat_map = {c["id"]: c["name"] for c in all_cats}
+
+    def cat_names_for_book(book_id: int) -> str:
+        ids = categories.get_for_book(book_id) or []
+        names = [cat_map.get(cid) for cid in ids if cid in cat_map]
+        return ", ".join([n for n in names if n]) or None
+
+    def enrich(rows):
+        for b in rows:
+            bid = b["id"]
+            b["avg_rating"] = ratings.get_avg_rating(bid)
+            b["creator_rating"] = ratings.get_creator_rating(bid)
+            b["categories_str"] = cat_names_for_book(bid)
+            b["comments"] = comments.get_comments(bid)
+            b["comment_count"] = comments.get_comment_count(bid)
+
+    enrich(user_books)
+    enrich(all_books)
+
+    user_groups = []
+    current_username = None
+    current_group = None
+    for b in all_books:
+        if b["username"] != current_username:
+            if current_group:
+                user_groups.append(current_group)
+            current_username = b["username"]
+            current_group = {"owner_id": b.get("owner_id"), "username": b["username"], "books": []}
+        current_group["books"].append(b)
+    if current_group:
+        user_groups.append(current_group)
+
+    return render_template("dashboard.html", user_books=user_books, user_groups=user_groups)
 
 def safe_next_url():
     nxt = request.form.get("next") or request.args.get("next") or ""

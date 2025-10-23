@@ -2,6 +2,9 @@
 
 Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjoista.
 
+## Arvioijalle tiedoksi:
+Tein puolivälissä projektia dev branchin, jossa kokeilin tiettyjä toiminnallisuuksia ja jotka oli tarkoitettu vain testausta varten. Mergesin branchin mainiin, joten commit viestit ovat sen takia epäselviä ja vajaita (tein niitä dev branchissa vaan huviksi, en hyödyksi). En tajunnut, että ne näkyvät lopullisessa työssä.
+
 ## Toteutettu
 
 - Käyttäjät voivat **luoda tunnuksen ja kirjautua sisään**.

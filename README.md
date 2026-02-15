@@ -14,6 +14,7 @@ Sovellus, jossa käyttäjät voivat pitää kirjalistaa ja jakaa tietoja kirjois
 - Kirjat voidaan luokitella **genreittäin** tai **arvostelun** perusteella, ja niitä voidaan selata kategorioiden kautta.
 - Käyttäjillä on omat käyttäjäsivut, joissa on tilastoja
 - Käyttöliittymää on selkeytetty ja siihen on lisätty tyyliasetuksia
+HUOM! Styling jäi hieman kesken.
 
 ## Sovelluksen asennus
 
